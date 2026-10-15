@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>30 Days to MLE — Resources · @buildwithakshita</title>
+<meta name="description" content="Every free resource I'm using to go from software developer to ML engineer — Harvard Stat 110 probability, plus 3Blue1Brown calculus and linear algebra.">
+<link rel="canonical" href="https://buildwithakshita.github.io/ml-resources/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://buildwithakshita.github.io/ml-resources/">
+<meta property="og:title" content="30 Days to MLE — the resource list">
+<meta property="og:description" content="Every free resource I'm using to go from software developer to ML engineer — Harvard Stat 110 probability, plus 3Blue1Brown calculus and linear algebra.">
+<meta property="og:image" content="https://buildwithakshita.github.io/ml-resources/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#273518">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23273518'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-style='italic' font-weight='700' font-size='30' text-anchor='middle' fill='%23DDA05E'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,700&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: forest masthead with the series name, then three resource sheets on cream, each = links row + numbered syllabus. Single brand look (no theme switch). */
+:root {
+  --forest: #273518;
+  --olive: #5F6C37;
+  --cream: #FEFADF;
+  --paper: #F6F1D8;
+  --tan: #DDA05E;
+  --rust: #BC6C25;
+  --ink-soft: #4A5536;
+  --line: rgba(39, 53, 24, 0.16);
+  --display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --body: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--cream); color: var(--forest); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+a { color: inherit; }
+a:focus-visible { outline: 2px solid var(--rust); outline-offset: 3px; border-radius: 6px; }
+
+.mast { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 56px 64px; }
+.wrap { max-width: 860px; margin: 0 auto; }
+.handle { display: inline-flex; align-items: center; gap: 8px; background: var(--tan); color: var(--forest); font-weight: 700; font-size: 14px; letter-spacing: 0.02em; padding: 8px 16px; border-radius: 999px; text-decoration: none; }
+.handle:hover { background: var(--cream); }
+.pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.handle.alt { background: transparent; color: var(--cream); box-shadow: inset 0 0 0 1.5px var(--tan); }
+.handle.alt:hover { background: var(--tan); color: var(--forest); }
+.mast h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 7vw, 4.2rem); line-height: 1.05; margin: 28px 0 0; text-wrap: balance; }
+.mast h1 em { color: var(--tan); font-weight: 700; }
+.mast p.lede { max-width: 58ch; margin: 22px 0 0; font-size: 1.05rem; color: var(--cream); opacity: 0.92; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 28px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tan); }
+
+main { padding-inline: 20px; padding-block: 24px 40px; }
+.res { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 36px; padding-block: 48px; border-bottom: 1px solid var(--line); }
+.res:last-of-type { border-bottom: 0; }
+.num { font-family: var(--display); font-style: italic; font-weight: 700; font-size: 4.5rem; line-height: 0.9; color: var(--tan); }
+.kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); }
+.res h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 4.5vw, 2.5rem); line-height: 1.1; margin: 6px 0 4px; text-wrap: balance; }
+.res h2 em { color: var(--rust); font-weight: 700; }
+.who { font-size: 14px; font-weight: 600; color: var(--ink-soft); margin: 0; }
+.why { margin: 16px 0 0; max-width: 60ch; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.facts li { font-size: 13px; font-weight: 600; background: var(--paper); border: 1px solid var(--line); padding: 4px 12px; border-radius: 999px; }
+
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 0; }
+.btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--forest); color: var(--forest); background: transparent; }
+.btn:hover { background: var(--forest); color: var(--cream); }
+.btn.primary { background: var(--forest); color: var(--cream); }
+.btn.primary:hover { background: var(--rust); border-color: var(--rust); }
+.btn span { font-size: 12px; opacity: 0.8; }
+
+.syllabus { margin: 32px 0 0; padding: 0; list-style: none; counter-reset: t; border-top: 1px solid var(--line); }
+.syllabus li { counter-increment: t; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 12px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.syllabus li::before { content: counter(t, decimal-leading-zero); font-weight: 700; font-size: 14px; color: var(--rust); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.syllabus strong { display: block; font-weight: 600; font-size: 1rem; }
+.syllabus small { display: block; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+footer { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 40px; }
+footer .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+footer p { margin: 0; font-family: var(--display); font-size: 1.35rem; }
+footer p em { color: var(--tan); }
+footer .gh { margin-top: 20px; font-size: 13px; opacity: 0.75; }
+footer .gh a { color: var(--cream); }
+
+@media (max-width: 640px) {
+  .res { grid-template-columns: minmax(0, 1fr); padding-block: 36px; }
+  .num { font-size: 3.2rem; }
+  .mast { padding-block: 40px 48px; }
+}
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap">
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+    <h1>30 Days to <em>MLE</em><br>the resource list</h1>
+    <p class="lede">Every free resource I'm using to go from software developer to ML engineer, after a full-time job. Probability from Harvard, plus calculus and linear algebra from 3Blue1Brown: the maths that every model is built on.</p>
+    <div class="legend"><span>3 resources</span><span>26 topics</span><span>All free</span></div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <section class="res" id="probability">
+      <div class="num">01</div>
+      <div>
+        <div class="kicker">Harvard · Statistics 110</div>
+        <h2>Probability, <em>Stat 110</em></h2>
+        <p class="who">Joe Blitzstein · Harvard University</p>
+        <p class="why">Models are probability machines. Loss functions, Naive Bayes, and how a model expresses uncertainty all come straight from here.</p>
+        <ul class="facts"><li>Full lecture series</li><li>Free textbook</li><li>edX: 10 weeks, 5–10 hrs/week</li><li>Free to audit</li></ul>
+        <div class="links">
+          <a class="btn primary" href="https://www.youtube.com/playlist?list=PLLVplP8OIVc8EktkrD3Q8td0GmId7DjW0" target="_blank" rel="noopener">Lecture videos <span>YouTube</span></a>
+          <a class="btn" href="http://probabilitybook.net" target="_blank" rel="noopener">Free textbook</a>
+          <a class="btn" href="https://stat110.hsites.harvard.edu/strategic-practice-problems" target="_blank" rel="noopener">Practice problems</a>
+          <a class="btn" href="https://stat110.hsites.harvard.edu/handouts" target="_blank" rel="noopener">Handouts</a>
+          <a class="btn" href="https://stat110.hsites.harvard.edu/" target="_blank" rel="noopener">Course site</a>
+          <a class="btn" href="https://www.edx.org/learn/probability/harvard-university-introduction-to-probability" target="_blank" rel="noopener">HarvardX on edX</a>
+        </div>
+        <ol class="syllabus">
+          <li><div><strong>Basics &amp; Foundations</strong><small>Sample spaces, events, counting methods, story proofs</small></div></li>
+          <li><div><strong>Conditional Probability</strong><small>Conditioning, independence, Bayes' Rule</small></div></li>
+          <li><div><strong>Discrete Random Variables</strong><small>PMFs, expectation, variance; Binomial, Negative Binomial, Poisson</small></div></li>
+          <li><div><strong>Continuous Random Variables</strong><small>PDFs, CDFs; Normal, Uniform, Exponential, Beta, Gamma</small></div></li>
+          <li><div><strong>Expectation &amp; Transformations</strong><small>Moment generating functions, covariance, correlation, conditional expectation</small></div></li>
+          <li><div><strong>Multivariate Distributions</strong><small>Joint, conditional and marginal distributions; Multinomial, Multivariate Normal</small></div></li>
+          <li><div><strong>Limit Theorems</strong><small>Law of Large Numbers, Central Limit Theorem</small></div></li>
+          <li><div><strong>Stochastic Processes</strong><small>Markov chains, transition probabilities, stationary distributions, convergence</small></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="res" id="calculus">
+      <div class="num">02</div>
+      <div>
+        <div class="kicker">3Blue1Brown · YouTube series</div>
+        <h2>Essence of <em>Calculus</em></h2>
+        <p class="who">Grant Sanderson · 3Blue1Brown</p>
+        <p class="why">Gradient descent and backpropagation are derivatives in disguise. This is the visual version that makes them click.</p>
+        <ul class="facts"><li>12 short videos</li><li>Visual, no heavy algebra</li><li>Free</li></ul>
+        <div class="links">
+          <a class="btn primary" href="https://www.youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr" target="_blank" rel="noopener">Watch the series <span>YouTube</span></a>
+          <a class="btn" href="https://www.3blue1brown.com/lessons/essence-of-calculus/" target="_blank" rel="noopener">Lessons on 3blue1brown.com</a>
+        </div>
+        <ol class="syllabus">
+          <li><div><strong>Introduction &amp; Circle Area</strong><small>Slicing a circle into rings to go from finite sums to continuous area</small></div></li>
+          <li><div><strong>Limits</strong><small>What it means for one value to approach another</small></div></li>
+          <li><div><strong>Derivatives</strong><small>Rate of change as the nudge shrinks to zero; sum, product and chain rules</small></div></li>
+          <li><div><strong>Integrals &amp; the Fundamental Theorem</strong><small>Area under a curve; why differentiation and integration are inverses</small></div></li>
+          <li><div><strong>Advanced &amp; Bonus Topics</strong><small>Taylor series, divergence and curl, and the backpropagation calculus behind neural nets</small></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="res" id="linear-algebra">
+      <div class="num">03</div>
+      <div>
+        <div class="kicker">3Blue1Brown · YouTube series</div>
+        <h2>Essence of <em>Linear Algebra</em></h2>
+        <p class="who">Grant Sanderson · 3Blue1Brown</p>
+        <p class="why">Data, weights and embeddings are all vectors and matrices. This series shows matrices as transformations of space, which is how models actually use them.</p>
+        <ul class="facts"><li>16 short videos</li><li>Visual, intuition-first</li><li>Free</li></ul>
+        <div class="links">
+          <a class="btn primary" href="https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab" target="_blank" rel="noopener">Watch the series <span>YouTube</span></a>
+          <a class="btn" href="https://www.youtube.com/@3blue1brown" target="_blank" rel="noopener">3Blue1Brown channel</a>
+        </div>
+        <ol class="syllabus">
+          <li><div><strong>Vectors</strong><small>Physics, CS and maths views; addition and scalar multiplication</small></div></li>
+          <li><div><strong>Linear Combinations, Span &amp; Basis</strong><small>How scaling and adding vectors builds a span; basis vectors and coordinates</small></div></li>
+          <li><div><strong>Linear Transformations &amp; Matrices</strong><small>Functions that keep grid lines parallel and the origin fixed</small></div></li>
+          <li><div><strong>Matrix Multiplication as Composition</strong><small>Applying one transformation after another</small></div></li>
+          <li><div><strong>3D Linear Transformations</strong><small>The same ideas, extended to 3D space</small></div></li>
+          <li><div><strong>Determinants</strong><small>How area or volume scales, orientation flips, dimensional collapse</small></div></li>
+          <li><div><strong>Inverse Matrices, Column Space &amp; Null Space</strong><small>Solving Ax = v, and when an answer exists</small></div></li>
+          <li><div><strong>Nonsquare Matrices</strong><small>Mapping between different dimensions</small></div></li>
+          <li><div><strong>Dot Products &amp; Duality</strong><small>Projections and what a dot product really measures</small></div></li>
+          <li><div><strong>Cross Products</strong><small>Areas from cross products and their link to transformations</small></div></li>
+          <li><div><strong>Cramer's Rule</strong><small>Solving linear systems geometrically with determinants</small></div></li>
+          <li><div><strong>Change of Basis</strong><small>Translating vectors and matrices between coordinate systems</small></div></li>
+          <li><div><strong>Eigenvectors &amp; Eigenvalues</strong><small>Vectors that only get scaled, never knocked off their span</small></div></li>
+        </ol>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Follow the 30 days on <em>Instagram</em> &amp; <em>GitHub</em></p>
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+  </div>
+  <div class="wrap gh">Code &amp; projects at <a href="https://github.com/buildwithakshita" target="_blank" rel="noopener">github.com/buildwithakshita</a> · <a href="https://github.com/buildwithakshita/ml-resources" target="_blank" rel="noopener">View this page's source</a></div>
+</footer>
+</body>
+</html>
