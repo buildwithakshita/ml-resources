@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Day 2 · NYC Airbnb — Resources · @buildwithakshita</title>
+<meta name="description" content="Day 2 of 30 Days to MLE: the NYC Airbnb dataset, my notebook, and free guides and videos to learn pandas, NumPy and Matplotlib.">
+<link rel="canonical" href="https://buildwithakshita.github.io/ml-resources/day-2/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://buildwithakshita.github.io/ml-resources/day-2/">
+<meta property="og:title" content="Day 2 · NYC Airbnb — the resource list">
+<meta property="og:description" content="Day 2 of 30 Days to MLE: the NYC Airbnb dataset, my notebook, and free guides and videos to learn pandas, NumPy and Matplotlib.">
+<meta property="og:image" content="https://buildwithakshita.github.io/ml-resources/day-2/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#273518">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23273518'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-style='italic' font-weight='700' font-size='30' text-anchor='middle' fill='%23DDA05E'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,700&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: forest masthead with the series name, then three resource sheets on cream, each = links row + numbered syllabus. Single brand look (no theme switch). */
+:root {
+  --forest: #273518;
+  --olive: #5F6C37;
+  --cream: #FEFADF;
+  --paper: #F6F1D8;
+  --tan: #DDA05E;
+  --rust: #BC6C25;
+  --ink-soft: #4A5536;
+  --line: rgba(39, 53, 24, 0.16);
+  --display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --body: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--cream); color: var(--forest); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+a { color: inherit; }
+a:focus-visible { outline: 2px solid var(--rust); outline-offset: 3px; border-radius: 6px; }
+
+.mast { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 56px 64px; }
+.wrap { max-width: 860px; margin: 0 auto; }
+.handle { display: inline-flex; align-items: center; gap: 8px; background: var(--tan); color: var(--forest); font-weight: 700; font-size: 14px; letter-spacing: 0.02em; padding: 8px 16px; border-radius: 999px; text-decoration: none; }
+.handle:hover { background: var(--cream); }
+.pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.handle.alt { background: transparent; color: var(--cream); box-shadow: inset 0 0 0 1.5px var(--tan); }
+.handle.alt:hover { background: var(--tan); color: var(--forest); }
+.mast h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 7vw, 4.2rem); line-height: 1.05; margin: 28px 0 0; text-wrap: balance; }
+.mast h1 em { color: var(--tan); font-weight: 700; }
+.mast p.lede { max-width: 58ch; margin: 22px 0 0; font-size: 1.05rem; color: var(--cream); opacity: 0.92; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 28px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tan); }
+
+main { padding-inline: 20px; padding-block: 24px 40px; }
+.res { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 36px; padding-block: 48px; border-bottom: 1px solid var(--line); }
+.res:last-of-type { border-bottom: 0; }
+.num { font-family: var(--display); font-style: italic; font-weight: 700; font-size: 4.5rem; line-height: 0.9; color: var(--tan); }
+.kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); }
+.res h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 4.5vw, 2.5rem); line-height: 1.1; margin: 6px 0 4px; text-wrap: balance; }
+.res h2 em { color: var(--rust); font-weight: 700; }
+.who { font-size: 14px; font-weight: 600; color: var(--ink-soft); margin: 0; }
+.why { margin: 16px 0 0; max-width: 60ch; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.facts li { font-size: 13px; font-weight: 600; background: var(--paper); border: 1px solid var(--line); padding: 4px 12px; border-radius: 999px; }
+
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 0; }
+.btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--forest); color: var(--forest); background: transparent; }
+.btn:hover { background: var(--forest); color: var(--cream); }
+.btn.primary { background: var(--forest); color: var(--cream); }
+.btn.primary:hover { background: var(--rust); border-color: var(--rust); }
+.btn span { font-size: 12px; opacity: 0.8; }
+
+.syllabus { margin: 32px 0 0; padding: 0; list-style: none; counter-reset: t; border-top: 1px solid var(--line); }
+.syllabus li { counter-increment: t; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 12px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.syllabus li::before { content: counter(t, decimal-leading-zero); font-weight: 700; font-size: 14px; color: var(--rust); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.syllabus strong { display: block; font-weight: 600; font-size: 1rem; }
+.syllabus small { display: block; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+footer { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 40px; }
+footer .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+footer p { margin: 0; font-family: var(--display); font-size: 1.35rem; }
+footer p em { color: var(--tan); }
+footer .gh { margin-top: 20px; font-size: 13px; opacity: 0.75; }
+footer .gh a { color: var(--cream); }
+.back { display: inline-block; margin-top: 18px; font-size: 13px; font-weight: 600; color: var(--tan); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .res { grid-template-columns: minmax(0, 1fr); padding-block: 36px; }
+  .num { font-size: 3.2rem; }
+  .mast { padding-block: 40px 48px; }
+}
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap">
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+    <h1>Day 2 · <em>NYC Airbnb</em><br>the resource list</h1>
+    <p class="lede">Everything behind Day 2 of 30 Days to MLE: my notebook, the dataset, and the free guides and videos to learn pandas, NumPy and Matplotlib yourself.</p>
+    <div class="legend"><span>1 dataset</span><span>3 libraries</span><span>Docs + videos</span><span>All free</span></div>
+    <a class="back" href="../">← All 30 Days to MLE resources</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <section class="res" id="dataset">
+      <div class="num">01</div>
+      <div>
+        <div class="kicker">The data · Kaggle</div>
+        <h2>NYC Airbnb <em>Open Data</em></h2>
+        <p class="who">Listings across all five boroughs</p>
+        <p class="why">The dataset from the video: price, neighbourhood, room type and reviews for every listing. Load it with pandas and start asking questions.</p>
+        <ul class="facts"><li>CSV, beginner friendly</li><li>Free Kaggle account</li><li>Runs in a Kaggle notebook, no setup</li></ul>
+        <div class="links">
+          <a class="btn primary" href="https://www.kaggle.com/code/aksh0205/nyc-airbnb" target="_blank" rel="noopener">My Kaggle notebook <span>Code from the video</span></a>
+          <a class="btn" href="https://www.kaggle.com/datasets/dgomonov/new-york-city-airbnb-open-data" target="_blank" rel="noopener">The dataset <span>Kaggle</span></a>
+        </div>
+        <ol class="syllabus">
+<li><div><strong>Load and clean</strong><small>Read the CSV with pandas, check for missing values, fix the price column</small></div></li><li><div><strong>Remove outliers</strong><small>Use NumPy to drop the extreme listings that drag the average up</small></div></li><li><div><strong>Group and compare</strong><small>Median price by neighbourhood with a single groupby</small></div></li><li><div><strong>Visualise</strong><small>Plot the most overpriced neighbourhoods and the hidden gems</small></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="res" id="pandas">
+      <div class="num">02</div>
+      <div>
+        <div class="kicker">Library · tables</div>
+        <h2>Learn <em>pandas</em></h2>
+        <p class="who">Think SQL table, living in your Python code</p>
+        <p class="why">pandas loads, cleans, filters and groups your data. If you know SQL, groupby will feel familiar straight away.</p>
+        <ul class="facts"><li>~1 hour to the basics</li><li>Docs + videos</li><li>Free</li></ul>
+        <div class="links">
+          <a class="btn primary" href="https://pandas.pydata.org/docs/user_guide/10min.html" target="_blank" rel="noopener">10 minutes to pandas <span>Official</span></a>
+          <a class="btn" href="https://www.kaggle.com/learn/pandas" target="_blank" rel="noopener">Kaggle pandas course</a>
+          <a class="btn" href="https://www.youtube.com/watch?v=EXIgjIBu4EU" target="_blank" rel="noopener">Pandas in 30 minutes <span>Tech With Tim · video</span></a>
+          <a class="btn" href="https://www.youtube.com/watch?v=gtjxAH8uaP0" target="_blank" rel="noopener">Pandas by example, full course <span>freeCodeCamp · video</span></a>
+        </div>
+        <ol class="syllabus">
+<li><div><strong>DataFrames and Series</strong><small>The two core objects, and how to read a CSV</small></div></li><li><div><strong>Selecting and filtering</strong><small>Columns, rows and conditions like price &gt; 200</small></div></li><li><div><strong>groupby</strong><small>Split, aggregate, combine: the GROUP BY of Python</small></div></li><li><div><strong>Cleaning</strong><small>Missing values, types and renaming</small></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="res" id="numpy">
+      <div class="num">03</div>
+      <div>
+        <div class="kicker">Library · numbers</div>
+        <h2>Learn <em>NumPy</em></h2>
+        <p class="who">Maths on thousands of numbers, no for-loops</p>
+        <p class="why">NumPy is the base every ML library is built on. Vectorised maths makes it fast and short to write.</p>
+        <ul class="facts"><li>~45 min to the basics</li><li>Docs + videos</li><li>Free</li></ul>
+        <div class="links">
+          <a class="btn primary" href="https://numpy.org/doc/stable/user/absolute_beginners.html" target="_blank" rel="noopener">NumPy for absolute beginners <span>Official</span></a>
+          <a class="btn" href="https://www.youtube.com/watch?v=QUT1VHiLmmI" target="_blank" rel="noopener">NumPy tutorial for beginners <span>freeCodeCamp · video</span></a>
+          <a class="btn" href="https://www.youtube.com/watch?v=XF6DCrNTzug" target="_blank" rel="noopener">NumPy fundamentals session <span>CampusX · video</span></a>
+          <a class="btn" href="https://www.youtube.com/watch?v=aYmcRnmZVGQ&amp;list=PL9n0l8rSshSnragNblKDBsT8Xu3otp3jA" target="_blank" rel="noopener">NumPy tutorial series <span>Build with Akshit · playlist</span></a>
+        </div>
+        <ol class="syllabus">
+<li><div><strong>Arrays</strong><small>Creating arrays and checking their shape</small></div></li><li><div><strong>Vectorised maths</strong><small>Operate on a whole column at once instead of looping</small></div></li><li><div><strong>Percentiles and statistics</strong><small>Mean, median and the 99th-percentile cut used for outliers</small></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="res" id="matplotlib">
+      <div class="num">04</div>
+      <div>
+        <div class="kicker">Library · charts</div>
+        <h2>Learn <em>Matplotlib</em></h2>
+        <p class="who">console.log, but for data</p>
+        <p class="why">Turns your results into charts people actually look at. Every chart in the Day 2 video was made with it.</p>
+        <ul class="facts"><li>~45 min to the basics</li><li>Free</li></ul>
+        <div class="links">
+          <a class="btn primary" href="https://matplotlib.org/stable/users/explain/quick_start.html" target="_blank" rel="noopener">Matplotlib quick start <span>Official</span></a>
+          <a class="btn" href="https://jakevdp.github.io/PythonDataScienceHandbook/" target="_blank" rel="noopener">Python Data Science Handbook</a>
+          <a class="btn" href="https://www.youtube.com/watch?v=3Xc3CA655Y4" target="_blank" rel="noopener">Matplotlib crash course <span>freeCodeCamp · video</span></a>
+        </div>
+        <ol class="syllabus">
+<li><div><strong>Figure and axes</strong><small>The two objects behind every plot</small></div></li><li><div><strong>Bar charts and histograms</strong><small>Comparing neighbourhoods and spotting outliers</small></div></li><li><div><strong>Scatter plots</strong><small>Price vs popularity, where the hidden gems show up</small></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="res" id="practice">
+      <div class="num">05</div>
+      <div>
+        <div class="kicker">Put it together · projects</div>
+        <h2>All three, <em>in practice</em></h2>
+        <p class="who">Once the basics click, watch them work together</p>
+        <p class="why">A full course that uses NumPy, pandas and Matplotlib side by side, and a portfolio project you can follow along and then redo on your own dataset.</p>
+        <ul class="facts"><li>Pick one, not both</li><li>Free</li></ul>
+        <div class="links">
+          <a class="btn primary" href="https://www.youtube.com/watch?v=r-uOLxNrNk8" target="_blank" rel="noopener">Data analysis with Python, full course <span>freeCodeCamp</span></a>
+          <a class="btn" href="https://www.youtube.com/watch?v=rAI4ITRMkTY&amp;list=PLTsu3dft3CWhLHbHTTzvG3Vx8XDWemG17" target="_blank" rel="noopener">Book sales portfolio project <span>Onur Baltaci · video</span></a>
+        </div>
+        <ol class="syllabus">
+<li><div><strong>Follow along once</strong><small>Code every cell yourself instead of just watching</small></div></li><li><div><strong>Redo it on new data</strong><small>Same steps on the NYC Airbnb dataset, or anything you care about</small></div></li><li><div><strong>Share one chart</strong><small>Post your favourite plot, the best proof you learned it</small></div></li>
+        </ol>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Follow the 30 days on <em>Instagram</em> &amp; <em>GitHub</em></p>
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+  </div>
+  <div class="wrap gh">Code &amp; projects at <a href="https://github.com/buildwithakshita" target="_blank" rel="noopener">github.com/buildwithakshita</a> · <a href="https://github.com/buildwithakshita/ml-resources" target="_blank" rel="noopener">View this page's source</a></div>
+</footer>
+
+</body>
+</html>
