@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Day 4 · F1 podium — Resources · @buildwithakshita</title>
+<meta name="description" content="Day 4 of 30 Days to MLE: predicting the Austin F1 podium with a random forest. The notebook, how it works in plain English, the free data, and where to learn it.">
+<link rel="canonical" href="https://buildwithakshita.github.io/ml-resources/day-4/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://buildwithakshita.github.io/ml-resources/day-4/">
+<meta property="og:title" content="Day 4 · F1 podium, predicted with ML">
+<meta property="og:description" content="Day 4 of 30 Days to MLE: predicting the Austin F1 podium with a random forest. The notebook, how it works in plain English, the free data, and where to learn it.">
+<meta property="og:image" content="https://buildwithakshita.github.io/ml-resources/day-4/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#273518">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23273518'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-style='italic' font-weight='700' font-size='30' text-anchor='middle' fill='%23DDA05E'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,700&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: forest masthead with the series name, then three resource sheets on cream, each = links row + numbered syllabus. Single brand look (no theme switch). */
+:root {
+  --forest: #273518;
+  --olive: #5F6C37;
+  --cream: #FEFADF;
+  --paper: #F6F1D8;
+  --tan: #DDA05E;
+  --rust: #BC6C25;
+  --ink-soft: #4A5536;
+  --line: rgba(39, 53, 24, 0.16);
+  --display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --body: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--cream); color: var(--forest); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+a { color: inherit; }
+a:focus-visible { outline: 2px solid var(--rust); outline-offset: 3px; border-radius: 6px; }
+
+.mast { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 56px 64px; }
+.wrap { max-width: 860px; margin: 0 auto; }
+.handle { display: inline-flex; align-items: center; gap: 8px; background: var(--tan); color: var(--forest); font-weight: 700; font-size: 14px; letter-spacing: 0.02em; padding: 8px 16px; border-radius: 999px; text-decoration: none; }
+.handle:hover { background: var(--cream); }
+.mast h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 7vw, 4.2rem); line-height: 1.05; margin: 28px 0 0; text-wrap: balance; }
+.mast h1 em { color: var(--tan); font-weight: 700; }
+.mast p.lede { max-width: 58ch; margin: 22px 0 0; font-size: 1.05rem; color: var(--cream); opacity: 0.92; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 28px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tan); }
+
+main { padding-inline: 20px; padding-block: 24px 40px; }
+.res { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 36px; padding-block: 48px; border-bottom: 1px solid var(--line); }
+.res:last-of-type { border-bottom: 0; }
+.num { font-family: var(--display); font-style: italic; font-weight: 700; font-size: 4.5rem; line-height: 0.9; color: var(--tan); }
+.kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); }
+.res h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 4.5vw, 2.5rem); line-height: 1.1; margin: 6px 0 4px; text-wrap: balance; }
+.res h2 em { color: var(--rust); font-weight: 700; }
+.who { font-size: 14px; font-weight: 600; color: var(--ink-soft); margin: 0; }
+.why { margin: 16px 0 0; max-width: 60ch; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.facts li { font-size: 13px; font-weight: 600; background: var(--paper); border: 1px solid var(--line); padding: 4px 12px; border-radius: 999px; }
+
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 0; }
+.btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--forest); color: var(--forest); background: transparent; }
+.btn:hover { background: var(--forest); color: var(--cream); }
+.btn.primary { background: var(--forest); color: var(--cream); }
+.btn.primary:hover { background: var(--rust); border-color: var(--rust); }
+.btn span { font-size: 12px; opacity: 0.8; }
+
+.syllabus { margin: 32px 0 0; padding: 0; list-style: none; counter-reset: t; border-top: 1px solid var(--line); }
+.syllabus li { counter-increment: t; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 12px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.syllabus li::before { content: counter(t, decimal-leading-zero); font-weight: 700; font-size: 14px; color: var(--rust); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.syllabus strong { display: block; font-weight: 600; font-size: 1rem; }
+.syllabus small { display: block; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+footer { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 40px; }
+footer .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+footer p { margin: 0; font-family: var(--display); font-size: 1.35rem; }
+footer p em { color: var(--tan); }
+
+@media (max-width: 640px) {
+  .res { grid-template-columns: minmax(0, 1fr); padding-block: 36px; }
+  .num { font-size: 3.2rem; }
+  .mast { padding-block: 40px 48px; }
+}
+.chart { margin: 28px 0 0; display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr); gap: 28px; align-items: center; }
+.chart img { width: 100%; border-radius: 14px; display: block; box-shadow: 0 8px 24px rgba(39,53,24,.18); }
+.podium { list-style: none; margin: 0; padding: 0; }
+.podium li { display: flex; align-items: baseline; gap: 14px; padding-block: 10px; border-bottom: 1px solid var(--line); }
+.podium b { font-family: var(--display); font-style: italic; color: var(--rust); font-size: 1.6rem; width: 44px; }
+.podium span { font-weight: 600; font-size: 1.05rem; }
+.podium small { margin-left: auto; color: var(--ink-soft); font-weight: 600; }
+.note { margin: 14px 0 0; font-size: 13px; color: var(--ink-soft); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 24px 0 0; }
+.stats div { background: var(--forest); color: var(--cream); border-radius: 14px; padding: 16px; }
+.stats b { display: block; font-family: var(--display); font-size: 2rem; color: var(--tan); line-height: 1.1; }
+.stats span { font-size: 13px; }
+@media (max-width: 640px) { .chart { grid-template-columns: minmax(0, 1fr); } .chart img { max-width: 260px; } .stats { grid-template-columns: minmax(0, 1fr); } }
+
+.pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.handle.alt { background: transparent; color: var(--cream); box-shadow: inset 0 0 0 1.5px var(--tan); }
+.handle.alt:hover { background: var(--tan); color: var(--forest); }
+footer .gh { margin-top: 20px; font-size: 13px; opacity: 0.75; }
+footer .gh a { color: var(--cream); }
+.back { display: inline-block; margin-top: 18px; font-size: 13px; font-weight: 600; color: var(--tan); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap">
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+    <h1>Day 4 · <em>F1 podium</em><br>predicted with ML</h1>
+    <p class="lede">Everything behind Day 4 of 30 Days to MLE: my notebook, how I built the model in plain English, the data, and where to learn random forests yourself.</p>
+    <div class="legend"><span>1 notebook</span><span>Free data</span><span>Runs in Colab</span></div>
+    <a class="back" href="../">← All 30 Days to MLE resources</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <section class="res" id="notebook">
+      <div class="num">01</div>
+      <div>
+        <div class="kicker">The notebook · Austin GP 2026</div>
+        <h2>My Austin <em>prediction</em></h2>
+        <p class="who">Random forest · every F1 race since 2021</p>
+        <p class="why">Open it in Google Colab and press Run all. It downloads the data, tests the model on every 2026 race, and draws the Austin prediction. During race weekend it also pulls practice and qualifying times.</p>
+        <div class="links">
+          <a class="btn primary" href="https://colab.research.google.com/drive/1jB8AVEkkS8UHBx99CcoHY87odEGX4uEM?usp=sharing" target="_blank" rel="noopener">Open in Colab <span>free, no setup</span></a>
+          <a class="btn" href="austin-f1-podium-prediction.ipynb" download>Download the notebook</a>
+        </div>
+        <div class="chart">
+          <img src="austin_chart_final.png" alt="Austin GP 2026 podium odds chart: Antonelli 66%, Verstappen 64%, Russell 59%">
+          <div>
+            <ol class="podium">
+              <li><b>P1</b><span>Kimi Antonelli</span><small>66%</small></li>
+              <li><b>P2</b><span>Max Verstappen</span><small>64%</small></li>
+              <li><b>P3</b><span>George Russell</span><small>59%</small></li>
+            </ol>
+            <p class="note">Chance of a podium, predicted before the weekend. It can't see safety cars, rain or Ferrari strategy.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="res" id="how">
+      <div class="num">02</div>
+      <div>
+        <div class="kicker">How I built it · plain English</div>
+        <h2>Six steps, <em>no magic</em></h2>
+        <p class="who">The same steps as almost every ML project</p>
+        <ol class="syllabus">
+<li><div><strong>Get the data</strong><small>Every F1 race result since 2021 from F1DB, a free database on GitHub.</small></div></li><li><div><strong>Clean it</strong><small>Crashes, retirements and disqualifications don't count toward form. A DNF says nothing about pace (sorry, Ferrari 2023).</small></div></li><li><div><strong>Build 4 features</strong><small>Recent finishes · recent points · car strength (team points per race) · track history at this Grand Prix.</small></div></li><li><div><strong>Don't trust one race</strong><small>If a driver has only raced here once, like Kimi in Austin, their track history is blended with current form.</small></div></li><li><div><strong>Train a random forest</strong><small>Hundreds of decision trees vote on one question: podium, yes or no?</small></div></li><li><div><strong>Test it honestly</strong><small>Predict every 2026 race using only data from before that race. Then predict Austin.</small></div></li>
+        </ol>
+        <div class="stats">
+          <div><b>~50%</b><span>of podium spots right before the weekend</span></div>
+          <div><b>~67%</b><span>once the real starting grid is known</span></div>
+          <div><b>~14%</b><span>random guessing, for comparison</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="res" id="data">
+      <div class="num">03</div>
+      <div>
+        <div class="kicker">The data · free</div>
+        <h2>Where the <em>F1 data</em> comes from</h2>
+        <p class="who">Two open-source projects</p>
+        <p class="why">F1DB has every result back to 1950 as simple CSV files. FastF1 gives you live timing, lap times and telemetry, and updates within hours of each session.</p>
+        <ul class="facts"><li>Free</li><li>Python friendly</li><li>Updated every race</li></ul>
+        <div class="links">
+          <a class="btn primary" href="https://github.com/f1db/f1db" target="_blank" rel="noopener">F1DB <span>GitHub</span></a>
+          <a class="btn" href="https://docs.fastf1.dev" target="_blank" rel="noopener">FastF1 docs <span>Python library</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="res" id="learn">
+      <div class="num">04</div>
+      <div>
+        <div class="kicker">Learn it yourself</div>
+        <h2>Random forests, <em>explained</em></h2>
+        <p class="who">From "what's a decision tree" to training one</p>
+        <p class="why">A random forest is a crowd of decision trees, each trained on a slightly different slice of the data. They vote, and the crowd is usually smarter than any one tree.</p>
+        <ul class="facts"><li>~2 hours total</li><li>Free</li></ul>
+        <div class="links">
+          <a class="btn primary" href="https://developers.google.com/machine-learning/decision-forests" target="_blank" rel="noopener">Decision forests course <span>Google</span></a>
+          <a class="btn" href="https://www.youtube.com/watch?v=J4Wdy0Wc_xQ" target="_blank" rel="noopener">Random forests <span>StatQuest</span></a>
+          <a class="btn" href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html" target="_blank" rel="noopener">RandomForestClassifier <span>scikit-learn</span></a>
+        </div>
+        <ol class="syllabus">
+<li><div><strong>Decision trees</strong><small>A flowchart of yes/no questions the model learns from data</small></div></li><li><div><strong>Bagging</strong><small>Train many trees on random samples, then let them vote</small></div></li><li><div><strong>Feature importance</strong><small>See which inputs the forest relied on most (for me: recent points and car strength)</small></div></li><li><div><strong>Watch out</strong><small>With rare outcomes like podiums, plain accuracy lies. Saying “no” to everyone is 86% accurate</small></div></li>
+        </ol>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Follow the 30 days on <em>Instagram</em> &amp; <em>GitHub</em></p>
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+  </div>
+  <div class="wrap gh">Code &amp; projects at <a href="https://github.com/buildwithakshita" target="_blank" rel="noopener">github.com/buildwithakshita</a> · <a href="https://github.com/buildwithakshita/ml-resources" target="_blank" rel="noopener">View this page's source</a></div>
+</footer>
+
+</body>
+</html>
