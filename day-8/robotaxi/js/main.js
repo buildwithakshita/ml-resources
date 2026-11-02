@@ -1,7 +1,7 @@
 import * as THREE from '../vendor/three.module.min.js';
 import { Track, startIndexFor, LANE } from './track.js';
 import { buildWorld, COLORS, to3, pedestrian, lidarPuck } from './world.js';
-import { Car } from './car.js';
+import { Car, SENSOR_ANGLES, SENSOR_RANGE } from './car.js';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -46,6 +46,30 @@ glow.rotation.x = -Math.PI / 2; scene.add(glow);
 function placeMesh(mesh, car, lift = 0) {
   mesh.position.set(car.x, lift, -car.y);
   mesh.rotation.y = car.heading;
+}
+
+// ---------- Sensors: 5 glowing beams showing what the car "sees" ----------
+const beamGeo = new THREE.CylinderGeometry(0.07, 0.07, 1, 6); beamGeo.translate(0, 0.5, 0); // base at origin, grows along +y
+const beams = new THREE.InstancedMesh(beamGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 }), SENSOR_ANGLES.length);
+const dots = new THREE.InstancedMesh(new THREE.SphereGeometry(0.2, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), SENSOR_ANGLES.length);
+scene.add(beams, dots);
+const far = new THREE.Color(COLORS.lamp), near = new THREE.Color(0xBC6C25), tmpC = new THREE.Color(), tmpM = new THREE.Matrix4();
+const UP = new THREE.Vector3(0, 1, 0), vA = new THREE.Vector3(), vB = new THREE.Vector3(), dir = new THREE.Vector3(), q = new THREE.Quaternion(), sc = new THREE.Vector3();
+function showSensors(car, visible = true) {
+  beams.visible = dots.visible = visible && car.alive;
+  if (!beams.visible) return;
+  SENSOR_ANGLES.forEach((ang, s) => {
+    const d = car.sensors[s], a = car.heading + ang;
+    vA.set(car.x + Math.cos(car.heading) * 1.2, 0.85, -(car.y + Math.sin(car.heading) * 1.2));
+    vB.set(car.x + Math.cos(a) * d, 0.3, -(car.y + Math.sin(a) * d));
+    dir.subVectors(vB, vA); const L = dir.length(); dir.normalize();
+    q.setFromUnitVectors(UP, dir); sc.set(1, L, 1);
+    tmpM.compose(vA, q, sc); beams.setMatrixAt(s, tmpM);
+    tmpC.copy(near).lerp(far, d / SENSOR_RANGE);
+    beams.setColorAt(s, tmpC); dots.setColorAt(s, tmpC);
+    tmpM.makeTranslation(vB.x, vB.y, vB.z); dots.setMatrixAt(s, tmpM);
+  });
+  for (const m of [beams, dots]) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
 }
 
 // ---------- Drive it yourself ----------
@@ -101,6 +125,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt; acc += dt;
   while (acc >= SIM_DT) { drivePlayer(SIM_DT); acc -= SIM_DT; }
   placeMesh(heroMesh, player); placeMesh(glow, player, 0.04);
+  showSensors(player);
   chase(player, dt);
   movePedestrian(clock);
   hud(player);
