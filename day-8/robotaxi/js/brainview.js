@@ -2,7 +2,7 @@
 // Lines = weights (tan = "push", cream = "pull back"), brightness = how much signal flows through right now.
 import { LAYERS } from './nn.js';
 
-const IN_LABELS = ['far left', 'left', 'ahead', 'right', 'far right'];
+const IN_LABELS = ['far right', 'right', 'ahead', 'left', 'far left'];
 
 export class BrainView {
   constructor(canvas) {

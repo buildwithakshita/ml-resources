@@ -4,7 +4,7 @@
 
 export const LANE = 5;            // width of the drivable lane (m) — a little wider than a real lane
 export const STEP = 0.5;          // spacing between centre-line samples (m)
-const CORNER_R = 16;              // corner radius (m)
+const CORNER_R = 21;              // corner radius (m)
 
 // Corners of a city block route, driven in this order (counter-clockwise from above).
 const CORNERS = [

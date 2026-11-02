@@ -26,11 +26,15 @@ export class Population {
   // Brains for the next generation: the champion unchanged, the rest are mutated copies of the top drivers.
   childrenOf(parents) {
     const out = [new Brain(parents[0].toJSON())];
+    // stuck? experiment more boldly, and bring in a few completely new brains ("new blood")
+    const boost = 1 + Math.min(3, (this.stagnant || 0) * 0.5);
+    const fresh = this.stagnant >= 2 ? 6 : 2;
+    for (let k = 0; k < fresh; k++) out.push(new Brain());
     while (out.length < POP) {
       // pick parents mostly from the very best, sometimes from the rest of the top group
       const p = parents[Math.floor(Math.random() ** 2 * parents.length)];
       const strong = Math.random() < 0.3;
-      out.push(p.mutate(strong ? 0.35 : 0.12, strong ? 0.8 : 0.35));
+      out.push(p.mutate(Math.min(0.9, (strong ? 0.35 : 0.12) * boost), (strong ? 0.8 : 0.35) * boost));
     }
     return out;
   }
@@ -65,6 +69,8 @@ export class Population {
     this.history.push(Math.min(1, top.lapFraction()));
     this.lastBestTime = top.finished ? top.finishTime : null;
     if (top.finished && (!this.bestLapTime || top.finishTime < this.bestLapTime)) this.bestLapTime = top.finishTime;
+    if (!this.champion || this.score(top) > this.championScore * 1.02) this.stagnant = 0;
+    else this.stagnant = (this.stagnant || 0) + 1;
     if (!this.champion || this.score(top) >= this.championScore) {
       this.champion = top.brain; this.championScore = this.score(top);
     }

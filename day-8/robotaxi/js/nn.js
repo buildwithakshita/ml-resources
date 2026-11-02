@@ -26,7 +26,7 @@ export class Brain {
       this.weights = []; this.biases = [];
       for (let l = 0; l < LAYERS.length - 1; l++) {
         const nin = LAYERS[l], nout = LAYERS[l + 1];
-        this.weights.push(Array.from({ length: nout }, () => Array.from({ length: nin }, () => gauss())));
+        this.weights.push(Array.from({ length: nout }, () => Array.from({ length: nin }, () => gauss() * 0.6)));
         this.biases.push(Array.from({ length: nout }, () => gauss() * 0.5));
       }
     }

@@ -3,6 +3,7 @@ import { Track, startIndexFor, LANE } from './track.js';
 import { buildWorld, COLORS, to3, pedestrian, lidarPuck } from './world.js';
 import { Car, SENSOR_ANGLES, SENSOR_RANGE } from './car.js';
 import { Population, POP } from './evolve.js';
+import { Brain } from './nn.js';
 import { BrainView } from './brainview.js';
 
 const canvas = document.getElementById('scene');
@@ -39,7 +40,8 @@ function movePedestrian(t) {
 
 // ---------- Cars ----------
 const SIM_DT = 1 / 60;
-let mode = 'learn';          // 'learn' | 'drive'
+let mode = 'learn';          // 'learn' | 'drive' | 'compare'
+let view = 'chase';          // 'chase' | 'top'
 let simSpeed = 1;           // 1×, 3× or 10× for learning
 const heroMat = new THREE.MeshStandardMaterial({ vertexColors: true, color: 0xfefadf, roughness: 0.35, metalness: 0.25, emissive: 0x3a3320, emissiveIntensity: 0.5 });
 const heroMesh = new THREE.Mesh(carGeo, heroMat); heroMesh.add(lidarPuck()); scene.add(heroMesh);
@@ -51,6 +53,7 @@ glow.rotation.x = -Math.PI / 2; scene.add(glow);
 const fleetMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.25, transparent: true, opacity: 0.55, depthWrite: false });
 const fleet = new THREE.InstancedMesh(carGeo, fleetMat, POP);
 fleet.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+fleet.frustumCulled = false;   // instances move all over the map; don't let three.js hide them
 scene.add(fleet);
 const C_ALIVE = new THREE.Color(0xa3aa9c), C_DEAD = new THREE.Color(0x6b3a1c), C_DONE = new THREE.Color(0xDDA05E);
 const fm = new THREE.Matrix4(), fq = new THREE.Quaternion(), fp = new THREE.Vector3(), fs = new THREE.Vector3(1, 1, 1), HIDE = new THREE.Vector3(0, 0, 0);
@@ -74,6 +77,7 @@ function placeMesh(mesh, car, lift = 0) {
 const beamGeo = new THREE.CylinderGeometry(0.07, 0.07, 1, 6); beamGeo.translate(0, 0.5, 0); // base at origin, grows along +y
 const beams = new THREE.InstancedMesh(beamGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 }), SENSOR_ANGLES.length);
 const dots = new THREE.InstancedMesh(new THREE.SphereGeometry(0.2, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), SENSOR_ANGLES.length);
+beams.frustumCulled = dots.frustumCulled = false;
 scene.add(beams, dots);
 const far = new THREE.Color(COLORS.lamp), near = new THREE.Color(0xBC6C25), tmpC = new THREE.Color(), tmpM = new THREE.Matrix4();
 const UP = new THREE.Vector3(0, 1, 0), vA = new THREE.Vector3(), vB = new THREE.Vector3(), dir = new THREE.Vector3(), q = new THREE.Quaternion(), sc = new THREE.Vector3();
@@ -151,6 +155,70 @@ function chase(car, dt, snap = false) {
 }
 chase(pop.cars[0], 0, true);
 
+// ---------- Top view: the whole city from above ----------
+const CENTRE = to3(62, 58, 0);
+function topCamera(dt, cam = camera, snap = false) {
+  // high enough to fit the whole ~200 m × 140 m loop on any screen shape
+  const aspect = cam.aspect || 1;
+  const h = Math.max(185, 250 / (0.93 * aspect));
+  const want = new THREE.Vector3(CENTRE.x, h, CENTRE.z + h * 0.28);
+  const k = snap ? 1 : Math.min(1, dt * 2.5);
+  camPos.lerp(want, k); camLook.lerp(CENTRE, k);
+  cam.position.copy(camPos); cam.lookAt(camLook);
+}
+
+// ---------- Gen 1 vs now: split screen glow-up ----------
+const camB = new THREE.PerspectiveCamera(50, 1, 0.5, 900);
+const cmp = { random: [], best: null, gen: 0, camA: [new THREE.Vector3(), new THREE.Vector3()], camB: [new THREE.Vector3(), new THREE.Vector3()] };
+const cmpFleet = new THREE.InstancedMesh(carGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.25 }), 24);
+cmpFleet.layers.set(1); cmpFleet.frustumCulled = false; scene.add(cmpFleet);
+const cmpHero = new THREE.Mesh(carGeo, new THREE.MeshStandardMaterial({ vertexColors: true, color: 0xfefadf, roughness: 0.35, metalness: 0.25, emissive: 0x3a3320, emissiveIntensity: 0.5 }));
+cmpHero.add(lidarPuck()); cmpHero.layers.set(2); cmpHero.children.forEach(c => c.layers.set(2)); scene.add(cmpHero);
+function startCompare() {
+  cmp.random = Array.from({ length: 24 }, () => new Car(track, START, new Brain()));
+  cmp.best = new Car(track, START, new Brain(pop.champion.toJSON()));
+  cmp.gen = pop.generation - 1;
+  for (const k of ['camA', 'camB']) cmp[k][0].set(0, 0, 0);
+  $('cmpRight').textContent = `Generation ${cmp.gen} · learned`;
+}
+function compareStep(dt) {
+  for (const c of cmp.random) if (c.alive) { c.sense(); c.think(); c.step(dt); }
+  const b = cmp.best;
+  if (b.alive) { b.sense(); b.think(); b.step(dt); if (b.lapFraction() >= 1) { b.alive = false; b.finished = true; } }
+  if (!b.alive && cmp.random.every(c => !c.alive)) startCompare();
+}
+function chaseInto(cam, store, car, dt) {
+  const a = car.heading;
+  const want = to3(car.x - Math.cos(a) * 13, car.y - Math.sin(a) * 13, 6.5), look = to3(car.x + Math.cos(a) * 12, car.y + Math.sin(a) * 12, 0.5);
+  if (store[0].lengthSq() === 0) { store[0].copy(want); store[1].copy(look); }
+  store[0].lerp(want, Math.min(1, dt * 3.5)); store[1].lerp(look, Math.min(1, dt * 3.5));
+  cam.position.copy(store[0]); cam.lookAt(store[1]);
+}
+function renderCompare(dt) {
+  // left: the random brains (follow whichever is furthest, it'll crash soon), right: the learned brain
+  const lead = cmp.random.reduce((a, c) => (c.alive && !a.alive) || (c.alive === a.alive && c.progress > a.progress) ? c : a, cmp.random[0]);
+  cmp.random.forEach((c, i) => {
+    fq.setFromAxisAngle(UP, c.heading + (c.alive ? 0 : 0.35)); fm.compose(fp.set(c.x, 0, -c.y), fq, fs);
+    cmpFleet.setMatrixAt(i, fm); cmpFleet.setColorAt(i, c.alive ? C_ALIVE : C_DEAD);
+  });
+  cmpFleet.instanceMatrix.needsUpdate = true; if (cmpFleet.instanceColor) cmpFleet.instanceColor.needsUpdate = true;
+  placeMesh(cmpHero, cmp.best);
+  const W = window.innerWidth, H = window.innerHeight, portrait = H > W;
+  const A = portrait ? [0, H / 2, W, H / 2] : [0, 0, W / 2, H];
+  const B = portrait ? [0, 0, W, H / 2] : [W / 2, 0, W / 2, H];
+  renderer.setScissorTest(true);
+  for (const [vp, cam, layer, car, store] of [[A, camera, 1, lead, cmp.camA], [B, camB, 2, cmp.best, cmp.camB]]) {
+    cam.aspect = vp[2] / vp[3]; cam.updateProjectionMatrix();
+    cam.layers.set(0); cam.layers.enable(layer);
+    chaseInto(cam, store, car, dt);
+    renderer.setViewport(...vp); renderer.setScissor(...vp);
+    renderer.render(scene, cam);
+  }
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, W, H);
+  camera.layers.set(0); camera.aspect = W / H; camera.updateProjectionMatrix();
+}
+
 // ---------- HUD ----------
 const $ = id => document.getElementById(id);
 const toastEl = $('toast');
@@ -160,6 +228,11 @@ function toast(msg, secs = 0) {
   toastEl.classList.toggle('info', !!msg && secs > 0); toastTimer = secs;
 }
 function hud() {
+  if (mode === 'compare') {
+    $('gen').textContent = 'Gen 1 vs now';
+    $('sub').textContent = `${cmp.random.filter(c => c.alive).length} of 24 random brains still driving`;
+    return;
+  }
   if (mode === 'drive') {
     $('gen').textContent = 'Drive it yourself';
     $('sub').textContent = `${Math.round(player.speed * 2.237)} mph · lap ${Math.min(100, Math.round(player.lapFraction() * 100))}%`;
@@ -193,8 +266,20 @@ function setMode(m) {
   document.body.dataset.mode = m;
   document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
   if (m === 'drive') { player.reset(START); chase(player, 0, true); toast(''); }
+  else if (m === 'compare') { startCompare(); toast(''); }
   else { focus = null; }
 }
+function setView(v) {
+  view = v;
+  document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === v));
+  scene.fog.near = v === 'top' ? 400 : 90; scene.fog.far = v === 'top' ? 900 : 300;
+}
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+$('compareBtn').addEventListener('click', () => {
+  if (!pop.champion || !pop.bestLapTime) { toast('Let it learn a full lap first', 1.6); return; }
+  setMode('compare');
+});
+$('backBtn').addEventListener('click', () => setMode('learn'));
 document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => {
   simSpeed = +b.dataset.speed;
@@ -210,6 +295,16 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt;
   if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toast(''); }
   let watched;
+  if (mode === 'compare') {
+    acc += dt;
+    let n = 0;
+    while (acc >= SIM_DT && n < 60) { compareStep(SIM_DT); acc -= SIM_DT; n++; }
+    fleet.count = 0; heroMesh.visible = glow.visible = false; showSensors(cmp.best, false);
+    movePedestrian(clock); hud();
+    renderCompare(dt);
+    requestAnimationFrame(frame);
+    return;
+  }
   if (mode === 'drive') {
     acc += dt;
     while (acc >= SIM_DT) { drivePlayer(SIM_DT); acc -= SIM_DT; }
@@ -228,7 +323,7 @@ function frame(now) {
   heroMat.color.set(watched.alive || watched.finished ? 0xfefadf : 0x8a5a36);
   showSensors(watched);
   if (mode === 'learn') brainView.draw(watched.brain);
-  chase(watched, dt);
+  if (view === 'top' && mode === 'learn') topCamera(dt); else chase(watched, dt);
   movePedestrian(clock);
   hud();
   renderer.render(scene, camera);

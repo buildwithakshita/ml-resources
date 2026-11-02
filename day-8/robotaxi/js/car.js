@@ -1,7 +1,7 @@
 // One car: simple top-down driving physics, 5 distance sensors, and progress along the road.
 import { LANE, STEP } from './track.js';
 
-export const SENSOR_ANGLES = [-60, -30, 0, 30, 60].map(d => d * Math.PI / 180); // far left → far right
+export const SENSOR_ANGLES = [-60, -30, 0, 30, 60].map(d => d * Math.PI / 180); // far right → far left (angles turn left as they grow)
 export const SENSOR_RANGE = 30;   // metres
 export const MAX_SPEED = 16;      // m/s (~36 mph)
 export const MIN_SPEED = 3;
