@@ -1,0 +1,29 @@
+/* Mini Robotaxi — dark robotaxi-screen look in the buildwithakshita palette */
+@font-face { font-family: "Montserrat"; src: url("fonts/Montserrat_400Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Montserrat"; src: url("fonts/Montserrat_600SemiBold.ttf") format("truetype"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Montserrat"; src: url("fonts/Montserrat_700Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Playfair Display"; src: url("fonts/PlayfairDisplay_600SemiBold_Italic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
+
+:root {
+  --bg: #0a0e07;
+  --forest: #273518;
+  --olive: #5F6C37;
+  --cream: #FEFADF;
+  --tan: #DDA05E;
+  --rust: #BC6C25;
+  --glass: rgba(16, 22, 11, 0.72);
+  --line: rgba(254, 250, 223, 0.12);
+  --body: "Montserrat", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --display: "Playfair Display", Georgia, serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--cream); font-family: var(--body); overflow: hidden; overscroll-behavior: none; }
+canvas#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+.glass { background: var(--glass); border: 1px solid var(--line); border-radius: 18px; backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2); }
+.hud { position: fixed; z-index: 2; }
+.top-left { top: max(14px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); padding: 14px 18px; min-width: 210px; }
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--tan); }
+.gen { font-family: var(--display); font-style: italic; font-size: 30px; line-height: 1.1; margin-top: 4px; }
+.sub { font-size: 13px; opacity: .8; margin-top: 4px; font-variant-numeric: tabular-nums; }
