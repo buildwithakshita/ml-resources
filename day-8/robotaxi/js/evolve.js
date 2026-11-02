@@ -2,12 +2,15 @@
 // Each generation, 50 cars drive. The best brains survive and pass on slightly tweaked copies.
 import { Brain } from './nn.js';
 import { Car } from './car.js';
+import { startIndexFor } from './track.js';
 
 export const POP = 50;
 export const GEN_TIME = 45;   // seconds a generation is allowed to drive
 
 export class Population {
-  constructor(track, startIndex, seedBrain = null, generation = 1) {
+  // roadFor(generation): optional — give every generation a different road ("train on many roads")
+  constructor(track, startIndex, seedBrain = null, generation = 1, roadFor = null) {
+    this.roadFor = roadFor;
     this.track = track;
     this.start = startIndex;
     this.generation = generation;
@@ -63,19 +66,42 @@ export class Population {
   // Fitness: how far you got, plus a bonus for finishing the lap quickly.
   score(c) { return c.bestProgress + (c.finished ? (GEN_TIME - c.finishTime) * 20 : 0); }
 
+  // Average share of a lap a brain manages on the practice roads (1 = finished every one).
+  practice(brain) {
+    if (!this.practiceRoads) this.practiceRoads = [-1, -2, -3].map(k => this.roadFor(k));
+    let total = 0;
+    for (const t of this.practiceRoads) {
+      const c = new Car(t, startIndexFor(t), brain);
+      while (c.alive && c.bestProgress < t.length && c.time < GEN_TIME) { c.sense(); c.think(); c.step(1 / 60); }
+      total += Math.min(1, c.lapFraction()) + (c.bestProgress >= t.length ? (GEN_TIME - c.time) / GEN_TIME * 0.2 : 0);
+    }
+    return total / this.practiceRoads.length;
+  }
+
   nextGeneration() {
     const ranked = [...this.cars].sort((a, b) => this.score(b) - this.score(a));
     const top = ranked[0];
     this.history.push(Math.min(1, top.lapFraction()));
     this.lastBestTime = top.finished ? top.finishTime : null;
     if (top.finished && (!this.bestLapTime || top.finishTime < this.bestLapTime)) this.bestLapTime = top.finishTime;
-    if (!this.champion || this.score(top) > this.championScore * 1.02) this.stagnant = 0;
-    else this.stagnant = (this.stagnant || 0) + 1;
-    if (!this.champion || this.score(top) >= this.championScore) {
-      this.champion = top.brain; this.championScore = this.score(top);
+    if (this.roadFor) {
+      // Scores on different roads can't be compared directly, so the top 3 of this generation
+      // and the current champion each take a quick test on 3 practice roads. Best one wins.
+      const candidates = [...new Set([this.champion, ...ranked.slice(0, 3).map(c => c.brain)].filter(Boolean))];
+      let best = null, bestScore = -1;
+      for (const b of candidates) { const sc = this.practice(b); if (sc > bestScore) { best = b; bestScore = sc; } }
+      this.stagnant = bestScore > (this.championScore || 0) + 0.01 ? 0 : (this.stagnant || 0) + 1;
+      this.champion = best; this.championScore = bestScore;
+    } else {
+      if (!this.champion || this.score(top) > this.championScore * 1.02) this.stagnant = 0;
+      else this.stagnant = (this.stagnant || 0) + 1;
+      if (!this.champion || this.score(top) >= this.championScore) {
+        this.champion = top.brain; this.championScore = this.score(top);
+      }
     }
     const parents = [this.champion, ...ranked.slice(0, 9).map(c => c.brain)];
     this.generation++;
+    if (this.roadFor) { this.track = this.roadFor(this.generation); this.start = startIndexFor(this.track); }
     this.spawn(this.childrenOf(parents));
   }
 }
