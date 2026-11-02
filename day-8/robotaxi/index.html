@@ -28,6 +28,7 @@
   <div class="seg glass">
     <button data-mode="learn" class="on">Learn</button>
     <button data-mode="drive">Drive</button>
+    <button data-mode="trip">Robotaxi</button>
   </div>
   <div class="seg glass learn-only">
     <button data-speed="1" class="on">1×</button>
@@ -46,9 +47,18 @@
 <div class="compare-only cmp-label cmp-a glass">Generation 1 · random brains</div>
 <div class="compare-only cmp-label cmp-b glass" id="cmpRight">Learned</div>
 
-<div class="hud bottom-left glass learn-only" id="brainPanel">
+<div class="hud bottom-left glass brain-panel" id="brainPanel">
   <div class="eyebrow">Its brain <span>· built from scratch</span></div>
   <canvas id="brain" aria-label="The neural network driving the car, live"></canvas>
+</div>
+
+<div class="hud bottom-right glass trip-only" id="tripCard">
+  <div class="eyebrow" id="tripTitle">Picking you up</div>
+  <div class="trip-where" id="tripWhere">Pickup · Harbor Ave</div>
+  <div class="trip-eta" id="tripEta">1 min · 0.1 mi</div>
+  <div class="bar"><i id="tripBar"></i></div>
+  <div class="tiny" id="tripNote"></div>
+  <div class="tiny" id="tripCount"></div>
 </div>
 
 <div class="toast" id="toast"></div>

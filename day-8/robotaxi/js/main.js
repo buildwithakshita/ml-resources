@@ -1,10 +1,11 @@
 import * as THREE from '../vendor/three.module.min.js';
-import { Track, startIndexFor, LANE } from './track.js';
-import { buildWorld, COLORS, to3, pedestrian, lidarPuck } from './world.js';
+import { Track, startIndexFor, LANE, STEP } from './track.js';
+import { buildWorld, COLORS, to3, pedestrian, lidarPuck, PARK } from './world.js';
 import { Car, SENSOR_ANGLES, SENSOR_RANGE } from './car.js';
 import { Population, POP } from './evolve.js';
 import { Brain } from './nn.js';
 import { BrainView } from './brainview.js';
+import { PRETRAINED, PRETRAINED_INFO } from './pretrained.js';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -40,7 +41,7 @@ function movePedestrian(t) {
 
 // ---------- Cars ----------
 const SIM_DT = 1 / 60;
-let mode = 'learn';          // 'learn' | 'drive' | 'compare'
+let mode = 'learn';          // 'learn' | 'drive' | 'compare' | 'trip'
 let view = 'chase';          // 'chase' | 'top'
 let simSpeed = 1;           // 1×, 3× or 10× for learning
 const heroMat = new THREE.MeshStandardMaterial({ vertexColors: true, color: 0xfefadf, roughness: 0.35, metalness: 0.25, emissive: 0x3a3320, emissiveIntensity: 0.5 });
@@ -219,6 +220,118 @@ function renderCompare(dt) {
   camera.layers.set(0); camera.aspect = W / H; camera.updateProjectionMatrix();
 }
 
+// ---------- Robotaxi mode: pickups and drop-offs ----------
+// Stops sit on the two long straight streets, where it's safe to pull over. Trips chain A → B → C → A …
+const STOPS = [[20, 0], [100, 0], [42, 120]].map(([x, y]) => track.nearest(x, y, 0, 0, track.n - 1));
+const STOP_NAMES = ['Market St', 'Harbor Ave', 'Elm St'];
+function makePin(color) {
+  const g = new THREE.Group();
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 16, 12, 1, true).translate(0, 8, 0),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+  const ring = new THREE.Mesh(new THREE.RingGeometry(1.6, 2.1, 40), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.06;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 12), new THREE.MeshBasicMaterial({ color }));
+  head.position.y = 16;
+  g.add(beam, ring, head); g.visible = false; scene.add(g);
+  return g;
+}
+const pickupPin = makePin(0xDDA05E), dropPin = makePin(0xFEFADF);
+const rider = pedestrian(); rider.visible = false; scene.add(rider);
+// glowing route line along the lane centre, from the car to the next stop
+const ROUTE_MAX = track.n + 2;
+const routeGeo = new THREE.BufferGeometry();
+routeGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(ROUTE_MAX * 6), 3));
+const routeIdx = []; for (let k = 0; k < ROUTE_MAX - 1; k++) { const v = k * 2; routeIdx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2); }
+routeGeo.setIndex(routeIdx);
+const route = new THREE.Mesh(routeGeo, new THREE.MeshBasicMaterial({ color: 0xDDA05E, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide }));
+route.frustumCulled = false; route.visible = false; scene.add(route);
+
+const trip = { car: null, k: 1, phase: 'idle', target: 0, wait: 0, done: 0, crashT: 0, brainNote: '' };
+function stopProgress(car, stopIdx) {
+  // progress value (metres from the car's start) where this stop is, always ahead of the car
+  let t = ((stopIdx - car.startIdx + track.n) % track.n) * STEP;
+  while (t < car.progress + 15) t += track.length;
+  return t;
+}
+function tripBrain() {
+  if (pop.champion && pop.bestLapTime) { trip.brainNote = `Driven by your generation ${pop.generation - 1} brain`; return new Brain(pop.champion.toJSON()); }
+  trip.brainNote = `Driven by a pre-trained brain (${PRETRAINED_INFO.generations} generations)`;
+  return new Brain(PRETRAINED);
+}
+function startTrips() {
+  trip.car = new Car(track, START, tripBrain());
+  trip.k = 1; trip.done = 0; trip.crashT = 0;
+  beginLeg('toPickup');
+}
+function beginLeg(phase) {
+  trip.phase = phase; trip.wait = 0;
+  const pickIdx = STOPS[trip.k % 3], dropIdx = STOPS[(trip.k + 1) % 3];
+  trip.pickIdx = pickIdx; trip.dropIdx = dropIdx;
+  if (phase === 'toPickup') {
+    trip.target = stopProgress(trip.car, pickIdx);
+    trip.legStart = trip.car.progress;
+    const p = track.at(pickIdx, LANE / 2), r = track.at(pickIdx, LANE + PARK + 1.2);
+    pickupPin.position.copy(to3(p[0], p[1])); pickupPin.visible = true;
+    const q = track.at(dropIdx, LANE / 2); dropPin.position.copy(to3(q[0], q[1])); dropPin.visible = true;
+    rider.position.copy(to3(r[0], r[1], 0.16)); rider.rotation.y = track.heading(pickIdx) - Math.PI / 2; rider.scale.setScalar(1); rider.visible = true;
+  } else if (phase === 'toDrop') {
+    trip.target = stopProgress(trip.car, dropIdx);
+    trip.legStart = trip.car.progress;
+    pickupPin.visible = false;
+  }
+}
+function tripStep(dt) {
+  const c = trip.car;
+  if (!c.alive) {
+    trip.crashT += dt;
+    if (trip.crashT > 2.2) { toast(''); startTrips(); }
+    return;
+  }
+  const rem = trip.target - c.progress;
+  const stopping = trip.phase === 'toPickup' || trip.phase === 'toDrop';
+  // the brain steers; the "trip planner" only decides when to slow down and stop, like a real robotaxi stack
+  c.speedCap = !stopping ? 0 : rem < 0.5 ? 0 : rem < 28 ? Math.max(1.2, Math.sqrt(2 * 2.2 * rem)) : Infinity;
+  c.sense(); c.think(); c.step(dt);
+  if (!c.alive) { toast('Crashed! This brain needs more training', 2.2); return; }
+  if (stopping && rem < 0.5 && c.speed < 0.3) trip.phase = trip.phase === 'toPickup' ? 'boarding' : 'arrived';
+  if (trip.phase === 'boarding') {
+    trip.wait += dt;
+    // the rider walks to the car and hops in
+    const k = Math.min(1, trip.wait / 2.2);
+    const from = track.at(trip.pickIdx, LANE + PARK + 1.2), to = [c.x, c.y];
+    rider.position.copy(to3(from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k, 0.16 * (1 - k)));
+    rider.scale.setScalar(k > 0.85 ? Math.max(0.01, (1 - k) / 0.15) : 1);
+    if (trip.wait > 2.6) { rider.visible = false; beginLeg('toDrop'); }
+  } else if (trip.phase === 'arrived') {
+    trip.wait += dt;
+    if (trip.wait > 2.4) { trip.done++; trip.k = (trip.k + 1) % 3; beginLeg('toPickup'); }
+  }
+}
+function drawRoute(car) {
+  const P = routeGeo.attributes.position.array;
+  const startI = car.idx, count = Math.max(2, Math.min(ROUTE_MAX - 1, Math.round((trip.target - car.progress) / STEP)));
+  for (let k = 0; k <= count; k++) {
+    const a = track.at(startI + k, LANE / 2 - 0.6), b = track.at(startI + k, LANE / 2 + 0.6);
+    P.set([a[0], 0.05, -a[1], b[0], 0.05, -b[1]], k * 6);
+  }
+  routeGeo.setDrawRange(0, count * 6);
+  routeGeo.attributes.position.needsUpdate = true;
+  route.visible = (trip.phase === 'toPickup' || trip.phase === 'toDrop') && car.alive;
+}
+function tripCard() {
+  const c = trip.car, rem = Math.max(0, trip.target - c.progress);
+  const titles = { toPickup: 'Picking you up', boarding: 'Your ride is here', toDrop: 'Heading to drop-off', arrived: "You've arrived" };
+  $('tripTitle').textContent = c.alive ? titles[trip.phase] : 'Crashed';
+  $('tripWhere').textContent = trip.phase === 'toPickup' || trip.phase === 'boarding' ? `Pickup · ${STOP_NAMES[trip.k % 3]}` : `Drop-off · ${STOP_NAMES[(trip.k + 1) % 3]}`;
+  const mins = Math.max(1, Math.round(rem / 11 / 60));
+  const dist = rem < 160 ? `${Math.round(rem * 3.281 / 10) * 10} ft` : `${(rem / 1609).toFixed(1)} mi`;
+  $('tripEta').textContent = trip.phase === 'boarding' || trip.phase === 'arrived' ? 'now' : `${mins} min · ${dist}`;
+  const leg = Math.max(1, trip.target - trip.legStart);
+  $('tripBar').style.width = `${Math.min(100, Math.max(0, 100 * (1 - rem / leg)))}%`;
+  $('tripNote').textContent = trip.brainNote;
+  $('tripCount').textContent = `${trip.done} trip${trip.done === 1 ? '' : 's'} completed`;
+}
+
 // ---------- HUD ----------
 const $ = id => document.getElementById(id);
 const toastEl = $('toast');
@@ -228,6 +341,12 @@ function toast(msg, secs = 0) {
   toastEl.classList.toggle('info', !!msg && secs > 0); toastTimer = secs;
 }
 function hud() {
+  if (mode === 'trip') {
+    $('gen').textContent = 'Robotaxi mode';
+    $('sub').textContent = `${Math.round(trip.car.speed * 2.237)} mph · no one in the driver's seat`;
+    tripCard();
+    return;
+  }
   if (mode === 'compare') {
     $('gen').textContent = 'Gen 1 vs now';
     $('sub').textContent = `${cmp.random.filter(c => c.alive).length} of 24 random brains still driving`;
@@ -267,7 +386,9 @@ function setMode(m) {
   document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
   if (m === 'drive') { player.reset(START); chase(player, 0, true); toast(''); }
   else if (m === 'compare') { startCompare(); toast(''); }
+  else if (m === 'trip') { startTrips(); chase(trip.car, 0, true); toast(''); }
   else { focus = null; }
+  if (m !== 'trip') { pickupPin.visible = dropPin.visible = rider.visible = route.visible = false; }
 }
 function setView(v) {
   view = v;
@@ -287,7 +408,7 @@ document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click
 }));
 $('restart').addEventListener('click', () => { pop = new Population(track, START); lastGen = pop.generation; focus = null; drawSpark(); toast('New cars, random brains', 1.4); });
 setMode('learn');
-window.__robotaxi = { get pop() { return pop; }, get focus() { return focus; } };   // handy for debugging in the console
+window.__robotaxi = { get pop() { return pop; }, get focus() { return focus; }, trip, tripStep };   // handy for debugging in the console
 
 // ---------- Loop ----------
 let last = performance.now(), clock = 0, acc = 0;
@@ -310,6 +431,14 @@ function frame(now) {
     while (acc >= SIM_DT) { drivePlayer(SIM_DT); acc -= SIM_DT; }
     watched = player;
     fleet.count = 0;
+  } else if (mode === 'trip') {
+    acc += dt;
+    while (acc >= SIM_DT) { tripStep(SIM_DT); acc -= SIM_DT; }
+    watched = trip.car;
+    fleet.count = 0;
+    drawRoute(watched);
+    const pulse = 1 + Math.sin(clock * 4) * 0.12;
+    for (const pin of [pickupPin, dropPin]) pin.children[1].scale.setScalar(pulse);
   } else {
     acc += dt * simSpeed;
     let n = 0;
@@ -322,7 +451,7 @@ function frame(now) {
   heroMesh.visible = glow.visible = true;
   heroMat.color.set(watched.alive || watched.finished ? 0xfefadf : 0x8a5a36);
   showSensors(watched);
-  if (mode === 'learn') brainView.draw(watched.brain);
+  if (mode === 'learn' || mode === 'trip') brainView.draw(watched.brain);
   if (view === 'top' && mode === 'learn') topCamera(dt); else chase(watched, dt);
   movePedestrian(clock);
   hud();
