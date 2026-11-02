@@ -13,7 +13,7 @@
 3. **It crashes.** Generation 1 has random weights, so almost every car leaves the road within seconds.
 4. **The best ones pass it on.** After each generation, the champion survives unchanged and the rest of the next 50 are mutated copies of the top 10. When progress stalls it mutates more boldly and adds a few brand-new brains. ([`js/evolve.js`](js/evolve.js))
 
-Fitness = metres driven along the road, plus a bonus for finishing the lap quickly. Over 30 headless test runs the first full lap arrived around generation 10 (90% by generation 19).
+Fitness = metres driven along the road, plus a bonus for finishing the lap quickly. In headless test runs the first full lap usually arrives within 10–15 generations, sometimes as late as ~30 (evolution is random). Use 10× speed if you're impatient.
 
 ## Modes
 

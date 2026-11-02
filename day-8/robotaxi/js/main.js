@@ -188,10 +188,11 @@ chase(pop.cars[0], 0, true);
 const CENTRE = to3(62, 58, 0);
 function topCamera(dt, cam = camera, snap = false) {
   if (cam.fov !== 50) { cam.fov = 50; cam.updateProjectionMatrix(); }
-  // high enough to fit the whole ~200 m × 140 m loop on any screen shape
-  const aspect = cam.aspect || 1;
-  const h = Math.max(185, 250 / (0.93 * aspect));
-  const want = new THREE.Vector3(CENTRE.x, h, CENTRE.z + h * 0.28);
+  // The city is ~200 m wide and ~140 m tall. On tall phone screens, turn the view 90° so it fills the screen.
+  const aspect = cam.aspect || 1, tall = aspect < 0.9;
+  const along = tall ? 140 : 200, across = tall ? 200 : 140;          // metres to fit horizontally / vertically
+  const h = Math.max(across / 0.93 + 20, (along + 30) / (0.93 * aspect));
+  const want = tall ? new THREE.Vector3(CENTRE.x + h * 0.28, h, CENTRE.z) : new THREE.Vector3(CENTRE.x, h, CENTRE.z + h * 0.28);
   const k = snap ? 1 : Math.min(1, dt * 2.5);
   camPos.lerp(want, k); camLook.lerp(CENTRE, k);
   cam.position.copy(camPos); cam.lookAt(camLook);
@@ -469,8 +470,8 @@ window.__robotaxi = { get pop() { return pop; }, get focus() { return focus; }, 
 
 // ---------- Loop ----------
 let last = performance.now(), clock = 0, acc = 0;
-function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt;
+function tick(dt) {
+  clock += dt;
   if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toast(''); }
   let watched;
   if (mode === 'compare') {
@@ -480,7 +481,6 @@ function frame(now) {
     fleet.count = 0; heroMesh.visible = glow.visible = false; showSensors(cmp.best, false);
     movePedestrian(clock); hud();
     renderCompare(dt);
-    requestAnimationFrame(frame);
     return;
   }
   if (mode === 'drive') {
@@ -513,6 +513,11 @@ function frame(now) {
   movePedestrian(clock);
   hud();
   renderer.render(scene, camera);
+}
+function frame(now) {
+  tick(Math.min(0.05, (now - last) / 1000)); last = now;
   requestAnimationFrame(frame);
 }
-requestAnimationFrame(frame);
+// ?capture = no automatic loop; a recorder calls __robotaxi.tick(1/30) once per video frame
+if (new URLSearchParams(location.search).has('capture')) window.__robotaxi.tick = tick;
+else requestAnimationFrame(frame);
