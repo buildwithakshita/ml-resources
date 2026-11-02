@@ -49,3 +49,7 @@ canvas#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: bl
 .pill { border: 1px solid var(--line); border-radius: 14px; padding: 10px 16px; }
 body[data-mode="drive"] .learn-only { display: none !important; }
 body:not([data-mode="drive"]) .drive-only { display: none !important; }
+
+.bottom-left { left: max(14px, env(safe-area-inset-left)); bottom: max(14px, env(safe-area-inset-bottom)); padding: 12px 14px 8px; width: 330px; }
+.bottom-left .eyebrow span { color: var(--cream); opacity: .6; letter-spacing: .08em; }
+#brain { display: block; width: 100%; height: 170px; margin-top: 6px; }

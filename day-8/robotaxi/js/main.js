@@ -3,6 +3,7 @@ import { Track, startIndexFor, LANE } from './track.js';
 import { buildWorld, COLORS, to3, pedestrian, lidarPuck } from './world.js';
 import { Car, SENSOR_ANGLES, SENSOR_RANGE } from './car.js';
 import { Population, POP } from './evolve.js';
+import { BrainView } from './brainview.js';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -184,6 +185,8 @@ function drawSpark() {
   });
 }
 
+const brainView = new BrainView($('brain'));
+
 // ---------- Controls ----------
 function setMode(m) {
   mode = m;
@@ -224,6 +227,7 @@ function frame(now) {
   heroMesh.visible = glow.visible = true;
   heroMat.color.set(watched.alive || watched.finished ? 0xfefadf : 0x8a5a36);
   showSensors(watched);
+  if (mode === 'learn') brainView.draw(watched.brain);
   chase(watched, dt);
   movePedestrian(clock);
   hud();
