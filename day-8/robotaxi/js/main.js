@@ -2,6 +2,7 @@ import * as THREE from '../vendor/three.module.min.js';
 import { Track, startIndexFor, LANE } from './track.js';
 import { buildWorld, COLORS, to3, pedestrian, lidarPuck } from './world.js';
 import { Car, SENSOR_ANGLES, SENSOR_RANGE } from './car.js';
+import { Population, POP } from './evolve.js';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -37,11 +38,31 @@ function movePedestrian(t) {
 
 // ---------- Cars ----------
 const SIM_DT = 1 / 60;
+let mode = 'learn';          // 'learn' | 'drive'
+let simSpeed = 1;           // 1×, 3× or 10× for learning
 const heroMat = new THREE.MeshStandardMaterial({ vertexColors: true, color: 0xfefadf, roughness: 0.35, metalness: 0.25, emissive: 0x3a3320, emissiveIntensity: 0.5 });
 const heroMesh = new THREE.Mesh(carGeo, heroMat); heroMesh.add(lidarPuck()); scene.add(heroMesh);
 // soft glow under the car you're watching
 const glow = new THREE.Mesh(new THREE.CircleGeometry(3.4, 40), new THREE.MeshBasicMaterial({ color: COLORS.lamp, transparent: true, opacity: 0.16, depthWrite: false }));
 glow.rotation.x = -Math.PI / 2; scene.add(glow);
+
+// all 50 learners share one instanced mesh; each gets its own colour
+const fleetMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45, metalness: 0.25, transparent: true, opacity: 0.55, depthWrite: false });
+const fleet = new THREE.InstancedMesh(carGeo, fleetMat, POP);
+fleet.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(fleet);
+const C_ALIVE = new THREE.Color(0xa3aa9c), C_DEAD = new THREE.Color(0x6b3a1c), C_DONE = new THREE.Color(0xDDA05E);
+const fm = new THREE.Matrix4(), fq = new THREE.Quaternion(), fp = new THREE.Vector3(), fs = new THREE.Vector3(1, 1, 1), HIDE = new THREE.Vector3(0, 0, 0);
+function drawFleet(cars, skip) {
+  cars.forEach((c, i) => {
+    if (c === skip) { fm.compose(fp.set(0, -50, 0), fq, HIDE); fleet.setMatrixAt(i, fm); return; }
+    fq.setFromAxisAngle(UP, c.heading + (c.alive ? 0 : 0.35));
+    fm.compose(fp.set(c.x, 0, -c.y), fq, fs); fleet.setMatrixAt(i, fm);
+    fleet.setColorAt(i, c.finished ? C_DONE : c.alive ? C_ALIVE : C_DEAD);
+  });
+  fleet.count = cars.length;
+  fleet.instanceMatrix.needsUpdate = true; if (fleet.instanceColor) fleet.instanceColor.needsUpdate = true;
+}
 
 function placeMesh(mesh, car, lift = 0) {
   mesh.position.set(car.x, lift, -car.y);
@@ -98,6 +119,25 @@ function drivePlayer(dt) {
   if (!player.alive) toast('Crashed! Resetting…');
 }
 
+// ---------- Learning ----------
+let pop = new Population(track, START);
+let focus = null, lastGen = pop.generation;
+function pickFocus() {
+  const lead = pop.leader();
+  if (!focus || !pop.cars.includes(focus) || (!focus.alive && lead.alive) || (lead.alive && lead.progress > focus.progress + 25)) focus = lead;
+  return focus;
+}
+function learnStep(dt) {
+  pop.step(dt);
+  if (pop.generation !== lastGen) { lastGen = pop.generation; focus = null; onNewGeneration(); }
+}
+function onNewGeneration() {
+  const best = pop.history[pop.history.length - 1];
+  toast(`Generation ${pop.generation}`, 1.2);
+  drawSpark();
+  void best;
+}
+
 // ---------- Chase camera ----------
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
 function chase(car, dt, snap = false) {
@@ -108,27 +148,85 @@ function chase(car, dt, snap = false) {
   camPos.lerp(want, k); camLook.lerp(look, k);
   camera.position.copy(camPos); camera.lookAt(camLook);
 }
-chase(player, 0, true);
+chase(pop.cars[0], 0, true);
 
 // ---------- HUD ----------
 const $ = id => document.getElementById(id);
 const toastEl = $('toast');
-function toast(msg) { toastEl.textContent = msg; toastEl.classList.toggle('show', !!msg); }
-function hud(car) {
-  $('gen').textContent = 'Drive it yourself';
-  $('sub').textContent = `${Math.round(car.speed * 2.237)} mph · lap ${Math.min(100, Math.round(car.lapFraction() * 100))}%`;
+let toastTimer = 0;
+function toast(msg, secs = 0) {
+  toastEl.textContent = msg; toastEl.classList.toggle('show', !!msg);
+  toastEl.classList.toggle('info', !!msg && secs > 0); toastTimer = secs;
 }
+function hud() {
+  if (mode === 'drive') {
+    $('gen').textContent = 'Drive it yourself';
+    $('sub').textContent = `${Math.round(player.speed * 2.237)} mph · lap ${Math.min(100, Math.round(player.lapFraction() * 100))}%`;
+    return;
+  }
+  const lap = Math.min(1, pop.bestLap());
+  $('gen').textContent = `Generation ${pop.generation}`;
+  $('sub').textContent = `${pop.alive} of ${POP} still driving`;
+  $('lapPct').textContent = `${Math.round(lap * 100)}%`;
+  $('lapBar').style.width = `${lap * 100}%`;
+  $('lapTime').textContent = pop.bestLapTime ? `best lap ${pop.bestLapTime.toFixed(1)}s` : 'no full lap yet';
+}
+const spark = $('spark'), sctx = spark.getContext('2d');
+function drawSpark() {
+  const w = spark.width = spark.clientWidth * devicePixelRatio, h = spark.height = spark.clientHeight * devicePixelRatio;
+  sctx.clearRect(0, 0, w, h);
+  const H = pop.history.slice(-30); if (!H.length) return;
+  const bw = w / 30;
+  H.forEach((v, i) => {
+    sctx.fillStyle = v >= 1 ? '#DDA05E' : 'rgba(254,250,223,.45)';
+    const bh = Math.max(2, v * (h - 2));
+    sctx.fillRect(i * bw + 1, h - bh, bw - 2, bh);
+  });
+}
+
+// ---------- Controls ----------
+function setMode(m) {
+  mode = m;
+  document.body.dataset.mode = m;
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  if (m === 'drive') { player.reset(START); chase(player, 0, true); toast(''); }
+  else { focus = null; }
+}
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => {
+  simSpeed = +b.dataset.speed;
+  document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b));
+}));
+$('restart').addEventListener('click', () => { pop = new Population(track, START); lastGen = pop.generation; focus = null; drawSpark(); toast('New cars, random brains', 1.4); });
+setMode('learn');
+window.__robotaxi = { get pop() { return pop; }, get focus() { return focus; } };   // handy for debugging in the console
 
 // ---------- Loop ----------
 let last = performance.now(), clock = 0, acc = 0;
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt; acc += dt;
-  while (acc >= SIM_DT) { drivePlayer(SIM_DT); acc -= SIM_DT; }
-  placeMesh(heroMesh, player); placeMesh(glow, player, 0.04);
-  showSensors(player);
-  chase(player, dt);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt;
+  if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toast(''); }
+  let watched;
+  if (mode === 'drive') {
+    acc += dt;
+    while (acc >= SIM_DT) { drivePlayer(SIM_DT); acc -= SIM_DT; }
+    watched = player;
+    fleet.count = 0;
+  } else {
+    acc += dt * simSpeed;
+    let n = 0;
+    while (acc >= SIM_DT && n < 240) { learnStep(SIM_DT); acc -= SIM_DT; n++; }
+    if (n >= 240) acc = 0;
+    watched = pickFocus();
+    drawFleet(pop.cars, watched);
+  }
+  placeMesh(heroMesh, watched); placeMesh(glow, watched, 0.04);
+  heroMesh.visible = glow.visible = true;
+  heroMat.color.set(watched.alive || watched.finished ? 0xfefadf : 0x8a5a36);
+  showSensors(watched);
+  chase(watched, dt);
   movePedestrian(clock);
-  hud(player);
+  hud();
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }

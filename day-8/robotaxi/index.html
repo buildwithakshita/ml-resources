@@ -15,11 +15,31 @@
   <div class="eyebrow">Mini Robotaxi</div>
   <div class="gen" id="gen">City block</div>
   <div class="sub" id="sub">Day 8 · 30 Days to MLE</div>
+  <div class="learn-only">
+    <div class="lap"><span>Best lap</span><b id="lapPct">0%</b></div>
+    <div class="bar"><i id="lapBar"></i></div>
+    <div class="tiny" id="lapTime">no full lap yet</div>
+    <canvas id="spark" aria-label="Best lap per generation"></canvas>
+    <div class="tiny">best lap, each generation</div>
+  </div>
+</div>
+
+<div class="hud top-right">
+  <div class="seg glass">
+    <button data-mode="learn" class="on">Learn</button>
+    <button data-mode="drive">Drive</button>
+  </div>
+  <div class="seg glass learn-only">
+    <button data-speed="1" class="on">1×</button>
+    <button data-speed="3">3×</button>
+    <button data-speed="10">10×</button>
+  </div>
+  <button class="pill glass learn-only" id="restart">↺ Restart</button>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<div class="hud pad" id="pad">
+<div class="hud pad drive-only" id="pad">
   <button class="key" data-key="left" aria-label="Steer left">◀</button>
   <button class="key gas" data-key="gas" aria-label="Accelerate">▲</button>
   <button class="key" data-key="right" aria-label="Steer right">▶</button>
