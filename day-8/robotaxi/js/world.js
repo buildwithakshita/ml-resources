@@ -1,6 +1,6 @@
 // The 3D city around the road. Logic lives in 2D (x, y); in 3D that becomes (x, height, -y).
 import * as THREE from '../vendor/three.module.min.js';
-import { LANE } from './track.js';
+import { LANE, straights } from './track.js';
 
 export const PARK = 2.6;      // parking strip width (m)
 export const WALK = 3.2;      // sidewalk width (m)
@@ -76,7 +76,8 @@ export function carGeometry() {
 export function buildWorld(scene, track) {
   const group = new THREE.Group();
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 1 }));
-  ground.rotation.x = -Math.PI / 2; ground.position.set(60, -0.05, -60);
+  const GB = track.bounds();
+  ground.rotation.x = -Math.PI / 2; ground.position.set(GB.cx, -0.05, -GB.cy);
   group.add(ground);
 
   // road: oncoming lane + our lane + a parking strip on each side
@@ -93,7 +94,10 @@ export function buildWorld(scene, track) {
   group.add(ribbon(track, -LANE, -LANE + 0.16, 0.02, COLORS.white, 1, 0.25));
 
   // crosswalk on the top street
-  const cw = track.nearest(55, 120, 0, 0, track.n - 1);
+  // crosswalk: the middle of the second-longest street (a fixed spot on the original city block)
+  let cw;
+  if (track.seed === null) cw = track.nearest(55, 120, 0, 0, track.n - 1);
+  else { const st = straights(track); const s2 = st[1] || st[0]; cw = (s2.start + Math.floor(s2.length / 2)) % track.n; }
   const stripeMat = new THREE.MeshStandardMaterial({ color: COLORS.white, roughness: 0.8, emissive: COLORS.white, emissiveIntensity: 0.18 });
   const head = track.heading(cw);
   for (let off = -LANE - PARK + 0.8; off <= LANE + PARK - 0.6; off += 1.2) {
@@ -110,15 +114,16 @@ export function buildWorld(scene, track) {
   for (let i = 0; i < track.n; i += 6) samples.push(track.centre[i]);
   const clear = LANE + PARK + WALK + 6;
   const boxes = [];
-  const rand = mulberry(7);
-  for (let x = -110; x <= 260; x += 13) {
-    for (let y = -100; y <= 220; y += 13) {
+  const rand = mulberry(track.seed === null ? 7 : track.seed + 11);
+  const B = track.bounds();
+  for (let x = B.minX - 85; x <= B.maxX + 85; x += 13) {
+    for (let y = B.minY - 85; y <= B.maxY + 85; y += 13) {
       const bx = x + (rand() - 0.5) * 3, by = y + (rand() - 0.5) * 3;
       const w = 7 + rand() * 4, d = 7 + rand() * 4;
       let ok = true;
       for (const c of samples) { if (Math.abs(c[0] - bx) < clear + w / 2 && Math.abs(c[1] - by) < clear + d / 2) { ok = false; break; } }
       if (!ok || rand() < 0.12) continue;
-      const far = Math.hypot(bx - 60, by - 60);
+      const far = Math.hypot(bx - B.cx, by - B.cy);
       const h = 3 + rand() * (far < 80 ? 7 : 16);
       boxes.push([bx, by, w, d, h]);
     }
@@ -191,4 +196,13 @@ export function lidarPuck() {
     [new THREE.CylinderGeometry(0.31, 0.31, 0.06, 20).translate(0, 1.72, 0), 0xDDA05E],
   ]);
   return new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.4, emissive: 0x2a1e0c, emissiveIntensity: 0.6 }));
+}
+
+// Remove a city built by buildWorld and free its GPU memory (used when switching roads).
+export function disposeWorld(scene, group) {
+  scene.remove(group);
+  group.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.dispose());
+  });
 }
