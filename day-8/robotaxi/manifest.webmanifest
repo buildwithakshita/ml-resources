@@ -1,0 +1,16 @@
+{
+  "name": "Mini Robotaxi",
+  "short_name": "Robotaxi",
+  "description": "50 cars learn to drive a city block with a tiny neural network built from scratch.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0e07",
+  "theme_color": "#0a0e07",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

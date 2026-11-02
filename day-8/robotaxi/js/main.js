@@ -125,8 +125,31 @@ function drivePlayer(dt) {
   if (!player.alive) toast('Crashed! Resetting…');
 }
 
+// ---------- Saved progress (this phone / browser only) ----------
+const SAVE_KEY = 'mini-robotaxi.v1';
+function saveProgress() {
+  if (!pop.champion) return;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      generation: pop.generation, champion: pop.champion.toJSON(), championScore: pop.championScore,
+      bestLapTime: pop.bestLapTime || null, history: pop.history.slice(-60),
+    }));
+  } catch (e) { /* private mode or storage full: just don't save */ }
+}
+function loadProgress() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+    if (!d || !d.champion) return null;
+    const p = new Population(track, START, new Brain(d.champion), d.generation);
+    p.championScore = d.championScore || 0; p.bestLapTime = d.bestLapTime || undefined; p.history = d.history || [];
+    return p;
+  } catch (e) { return null; }
+}
+function clearProgress() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
+
 // ---------- Learning ----------
-let pop = new Population(track, START);
+const restored = loadProgress();
+let pop = restored || new Population(track, START);
 let focus = null, lastGen = pop.generation;
 function pickFocus() {
   const lead = pop.leader();
@@ -138,10 +161,9 @@ function learnStep(dt) {
   if (pop.generation !== lastGen) { lastGen = pop.generation; focus = null; onNewGeneration(); }
 }
 function onNewGeneration() {
-  const best = pop.history[pop.history.length - 1];
   toast(`Generation ${pop.generation}`, 1.2);
   drawSpark();
-  void best;
+  saveProgress();
 }
 
 // ---------- Chase camera ----------
@@ -406,9 +428,17 @@ document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click
   simSpeed = +b.dataset.speed;
   document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b));
 }));
-$('restart').addEventListener('click', () => { pop = new Population(track, START); lastGen = pop.generation; focus = null; drawSpark(); toast('New cars, random brains', 1.4); });
+$('restart').addEventListener('click', () => { clearProgress(); pop = new Population(track, START); lastGen = pop.generation; focus = null; drawSpark(); toast('New cars, random brains', 1.4); });
 setMode('learn');
-window.__robotaxi = { get pop() { return pop; }, get focus() { return focus; }, trip, tripStep };   // handy for debugging in the console
+drawSpark();
+if (restored) setTimeout(() => toast(`Welcome back · generation ${pop.generation}`, 2.2), 600);
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveProgress(); });
+
+// ---------- Offline ----------
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+window.__robotaxi = { get pop() { return pop; }, get focus() { return focus; }, trip, tripStep, learnStep };   // handy for debugging in the console
 
 // ---------- Loop ----------
 let last = performance.now(), clock = 0, acc = 0;
