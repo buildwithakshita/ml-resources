@@ -1,8 +1,8 @@
 /* Mini Robotaxi — dark robotaxi-screen look in the buildwithakshita palette */
-@font-face { font-family: "Montserrat"; src: url("fonts/Montserrat_400Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Montserrat"; src: url("fonts/Montserrat_600SemiBold.ttf") format("truetype"); font-weight: 600; font-display: swap; }
-@font-face { font-family: "Montserrat"; src: url("fonts/Montserrat_700Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
-@font-face { font-family: "Playfair Display"; src: url("fonts/PlayfairDisplay_600SemiBold_Italic.ttf") format("truetype"); font-style: italic; font-weight: 600; font-display: swap; }
+@font-face { font-family: "Montserrat"; src: url("fonts/Montserrat_400Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Montserrat"; src: url("fonts/Montserrat_600SemiBold.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Montserrat"; src: url("fonts/Montserrat_700Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Playfair Display"; src: url("fonts/PlayfairDisplay_600SemiBold_Italic.woff2") format("woff2"); font-style: italic; font-weight: 600; font-display: swap; }
 
 :root {
   --bg: #0a0e07;
@@ -71,3 +71,62 @@ body[data-mode="compare"]::after { content: ""; position: fixed; z-index: 1; top
 .bottom-right { right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom)); padding: 14px 18px; width: 270px; }
 .trip-where { font-family: var(--display); font-style: italic; font-size: 22px; margin-top: 4px; }
 .trip-eta { font-size: 14px; font-weight: 600; margin-top: 2px; color: var(--tan); font-variant-numeric: tabular-nums; }
+
+.tools { display: contents; }
+.pill.primary { background: var(--tan); color: var(--forest); border-color: var(--tan); }
+a.pill { text-decoration: none; display: inline-flex; align-items: center; }
+
+/* clean view for filming: hide every button and panel */
+body.clean .hud, body.clean .cmp-label { display: none !important; }
+.clean-hint { position: fixed; z-index: 5; left: 50%; bottom: 24px; transform: translateX(-50%); font-size: 13px; padding: 8px 14px; border-radius: 99px; background: rgba(16,22,11,.8); opacity: 0; pointer-events: none; transition: opacity .3s; }
+.clean-hint.show { opacity: 1; }
+
+/* how it works sheet */
+.sheet-wrap { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 20px; background: rgba(5, 8, 3, .55); }
+.sheet-wrap[hidden] { display: none; }
+.sheet { max-width: 560px; width: 100%; max-height: calc(100vh - 40px); overflow: auto; padding: 26px 26px 22px; border-radius: 24px; }
+.sheet h1 { font-family: var(--display); font-weight: 600; font-style: italic; font-size: clamp(26px, 6vw, 34px); line-height: 1.1; margin: 8px 0 14px; }
+.sheet h1 em { color: var(--tan); }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 12px; }
+.steps li { counter-increment: s; position: relative; padding-left: 40px; font-size: 14.5px; line-height: 1.5; }
+.steps li::before { content: counter(s); position: absolute; left: 0; top: -1px; width: 27px; height: 27px; border-radius: 50%; display: grid; place-items: center; background: var(--tan); color: var(--forest); font-weight: 700; font-size: 13px; }
+.steps b { color: var(--tan); }
+.fine { font-size: 13px; opacity: .78; line-height: 1.5; margin: 16px 0 0; }
+.sheet-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+/* phones (portrait): mode switch on top, compact stats, toolbar + brain at the bottom */
+@media (max-width: 640px) {
+  .top-right { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top)); align-items: stretch; }
+  .modes { justify-content: space-between; }
+  .modes button { flex: 1; }
+  .top-left { top: calc(max(10px, env(safe-area-inset-top)) + 54px); left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); min-width: 0; padding: 10px 14px; }
+  .gen { font-size: 23px; }
+  .sub { font-size: 12px; }
+  .lap { margin-top: 6px; } #spark, .learn-only > .tiny:last-child { display: none; }
+  .tools { display: flex; position: fixed; left: 0; right: 0; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 168px); padding: 0 12px; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .tools::-webkit-scrollbar { display: none; }
+  .tools > * { flex: 0 0 auto; }
+  .seg button, .pill { padding: 7px 11px; font-size: 12.5px; }
+  .bottom-left { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); width: auto; padding: 10px 12px 6px; }
+  #brain { height: 128px; }
+  .bottom-right { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); width: auto; }
+  body[data-mode="trip"] .brain-panel { display: none !important; }
+  body[data-mode="trip"] .tools, body[data-mode="drive"] .tools { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 150px); }
+  body[data-mode="drive"] .tools { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 84px); }
+  body[data-mode="compare"] .tools { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 150px); }
+  .key { width: 64px; height: 64px; }
+}
+/* short landscape screens (phones on their side) */
+@media (max-height: 500px) and (orientation: landscape) {
+  .top-left { padding: 10px 14px; min-width: 180px; }
+  .gen { font-size: 22px; }
+  #spark, .learn-only > .tiny { display: none; }
+  .bottom-left { width: 270px; padding: 8px 10px 4px; }
+  #brain { height: 112px; }
+  .bottom-left .eyebrow span { display: none; }
+  .top-right { gap: 6px; }
+  .seg button, .pill { padding: 6px 10px; font-size: 12px; }
+  .bottom-right { width: 240px; padding: 10px 14px; }
+  .trip-where { font-size: 18px; }
+  body[data-mode="trip"] .brain-panel { display: none !important; }
+}

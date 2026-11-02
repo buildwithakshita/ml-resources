@@ -32,23 +32,27 @@
 </div>
 
 <div class="hud top-right">
-  <div class="seg glass">
+  <div class="seg glass modes">
     <button data-mode="learn" class="on">Learn</button>
     <button data-mode="drive">Drive</button>
     <button data-mode="trip">Robotaxi</button>
   </div>
-  <div class="seg glass learn-only">
-    <button data-speed="1" class="on">1×</button>
-    <button data-speed="3">3×</button>
-    <button data-speed="10">10×</button>
+  <div class="tools">
+    <div class="seg glass learn-only">
+      <button data-speed="1" class="on">1×</button>
+      <button data-speed="3">3×</button>
+      <button data-speed="10">10×</button>
+    </div>
+    <div class="seg glass learn-only">
+      <button data-view="chase" class="on">Chase</button>
+      <button data-view="top">Top</button>
+    </div>
+    <button class="pill glass learn-only" id="compareBtn">Gen 1 vs now</button>
+    <button class="pill glass learn-only" id="restart">↺ Restart</button>
+    <button class="pill glass compare-only" id="backBtn">← Back to learning</button>
+    <button class="pill glass" id="cleanBtn" title="Hide the buttons so you can screen-record a clean shot">◎ Clean view</button>
+    <button class="pill glass" id="aboutBtn">How it works</button>
   </div>
-  <div class="seg glass learn-only">
-    <button data-view="chase" class="on">Chase</button>
-    <button data-view="top">Top</button>
-  </div>
-  <button class="pill glass learn-only" id="compareBtn">Gen 1 vs now</button>
-  <button class="pill glass learn-only" id="restart">↺ Restart</button>
-  <button class="pill glass compare-only" id="backBtn">← Back to learning</button>
 </div>
 
 <div class="compare-only cmp-label cmp-a glass">Generation 1 · random brains</div>
@@ -69,6 +73,26 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="sheet-wrap" id="about" hidden>
+  <div class="sheet glass" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <div class="eyebrow">Day 8 · 30 Days to MLE</div>
+    <h1 id="aboutTitle">How the mini robotaxi <em>learns to drive</em></h1>
+    <ol class="steps">
+      <li><b>It sees.</b> Each car has 5 sensors that measure how far the edge of the lane is: far right, right, ahead, left, far left.</li>
+      <li><b>It decides.</b> A tiny neural network, written from scratch, turns those 5 numbers into two decisions: how much to steer and how fast to go.</li>
+      <li><b>It crashes. A lot.</b> Generation 1 has random brains, so almost every car drives straight off the road.</li>
+      <li><b>The best ones pass it on.</b> The cars that got furthest have their brains copied with tiny random changes. No one tells them the right answer. Like evolution, generation after generation, they figure out how to drive the whole block.</li>
+    </ol>
+    <p class="fine">Then try <b>Robotaxi</b> mode: the trained brain drives pickups and drop-offs on its own. Works offline once loaded, and remembers your progress on this device.</p>
+    <div class="sheet-actions">
+      <button class="pill primary" id="aboutClose">Start watching</button>
+      <a class="pill" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+    </div>
+  </div>
+</div>
+
+<div class="clean-hint" id="cleanHint">Tap anywhere to bring the buttons back</div>
 
 <div class="hud pad drive-only" id="pad">
   <button class="key" data-key="left" aria-label="Steer left">◀</button>

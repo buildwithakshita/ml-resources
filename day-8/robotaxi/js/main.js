@@ -168,9 +168,15 @@ function onNewGeneration() {
 
 // ---------- Chase camera ----------
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
+// tall phone screens need the camera further back and a wider lens
+function rig(aspect) {
+  const t = Math.max(0, Math.min(1, (1.1 - aspect) / 0.65));   // 0 on wide screens, 1 on a tall phone
+  return { back: 13 + 7 * t, up: 6.5 + 3.5 * t, fov: 50 + 12 * t };
+}
 function chase(car, dt, snap = false) {
-  const a = car.heading;
-  const want = to3(car.x - Math.cos(a) * 13, car.y - Math.sin(a) * 13, 6.5);
+  const a = car.heading, r = rig(camera.aspect);
+  if (Math.abs(camera.fov - r.fov) > 0.1) { camera.fov = r.fov; camera.updateProjectionMatrix(); }
+  const want = to3(car.x - Math.cos(a) * r.back, car.y - Math.sin(a) * r.back, r.up);
   const look = to3(car.x + Math.cos(a) * 12, car.y + Math.sin(a) * 12, 0.5);
   const k = snap ? 1 : Math.min(1, dt * 3.5);
   camPos.lerp(want, k); camLook.lerp(look, k);
@@ -181,6 +187,7 @@ chase(pop.cars[0], 0, true);
 // ---------- Top view: the whole city from above ----------
 const CENTRE = to3(62, 58, 0);
 function topCamera(dt, cam = camera, snap = false) {
+  if (cam.fov !== 50) { cam.fov = 50; cam.updateProjectionMatrix(); }
   // high enough to fit the whole ~200 m × 140 m loop on any screen shape
   const aspect = cam.aspect || 1;
   const h = Math.max(185, 250 / (0.93 * aspect));
@@ -211,8 +218,9 @@ function compareStep(dt) {
   if (!b.alive && cmp.random.every(c => !c.alive)) startCompare();
 }
 function chaseInto(cam, store, car, dt) {
-  const a = car.heading;
-  const want = to3(car.x - Math.cos(a) * 13, car.y - Math.sin(a) * 13, 6.5), look = to3(car.x + Math.cos(a) * 12, car.y + Math.sin(a) * 12, 0.5);
+  const a = car.heading, r = rig(cam.aspect);
+  cam.fov = r.fov; cam.updateProjectionMatrix();
+  const want = to3(car.x - Math.cos(a) * r.back, car.y - Math.sin(a) * r.back, r.up), look = to3(car.x + Math.cos(a) * 12, car.y + Math.sin(a) * 12, 0.5);
   if (store[0].lengthSq() === 0) { store[0].copy(want); store[1].copy(look); }
   store[0].lerp(want, Math.min(1, dt * 3.5)); store[1].lerp(look, Math.min(1, dt * 3.5));
   cam.position.copy(store[0]); cam.lookAt(store[1]);
@@ -429,6 +437,25 @@ document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click
   document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b));
 }));
 $('restart').addEventListener('click', () => { clearProgress(); pop = new Population(track, START); lastGen = pop.generation; focus = null; drawSpark(); toast('New cars, random brains', 1.4); });
+// clean view: hide every button for screen recording; tap the screen to bring them back
+const cleanHint = $('cleanHint');
+$('cleanBtn').addEventListener('click', () => {
+  document.body.classList.add('clean');
+  cleanHint.classList.add('show'); setTimeout(() => cleanHint.classList.remove('show'), 1800);
+});
+canvas.addEventListener('click', () => document.body.classList.remove('clean'));
+window.addEventListener('keydown', e => { if (e.key === 'h' || e.key === 'H') document.body.classList.toggle('clean'); });
+
+// how it works: shown on the first visit, and from the button
+const about = $('about');
+const openAbout = () => { about.hidden = false; };
+const closeAbout = () => { about.hidden = true; try { localStorage.setItem('mini-robotaxi.seen', '1'); } catch (e) { /* ignore */ } };
+$('aboutBtn').addEventListener('click', openAbout);
+$('aboutClose').addEventListener('click', closeAbout);
+about.addEventListener('click', e => { if (e.target === about) closeAbout(); });
+let seen = false; try { seen = localStorage.getItem('mini-robotaxi.seen') === '1'; } catch (e) { /* ignore */ }
+if (!seen && !new URLSearchParams(location.search).has('noabout')) openAbout();
+
 setMode('learn');
 drawSpark();
 if (restored) setTimeout(() => toast(`Welcome back · generation ${pop.generation}`, 2.2), 600);
