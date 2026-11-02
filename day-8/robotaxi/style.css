@@ -27,3 +27,10 @@ canvas#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: bl
 .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--tan); }
 .gen { font-family: var(--display); font-style: italic; font-size: 30px; line-height: 1.1; margin-top: 4px; }
 .sub { font-size: 13px; opacity: .8; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+.toast { position: fixed; z-index: 3; top: 42%; left: 50%; transform: translate(-50%, -50%) scale(.96); padding: 12px 22px; border-radius: 999px; background: rgba(188, 108, 37, .92); color: var(--cream); font-weight: 700; font-size: 15px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+.toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.pad { bottom: max(18px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; gap: 14px; }
+.key { width: 66px; height: 66px; border-radius: 20px; border: 1px solid var(--line); background: var(--glass); color: var(--cream); font-size: 22px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
+.key.gas { background: rgba(221, 160, 94, .22); border-color: rgba(221, 160, 94, .5); }
+.key.down { background: var(--tan); color: var(--forest); }

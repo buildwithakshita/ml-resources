@@ -1,6 +1,7 @@
 import * as THREE from '../vendor/three.module.min.js';
 import { Track, startIndexFor, LANE } from './track.js';
-import { buildWorld, COLORS, to3, pedestrian } from './world.js';
+import { buildWorld, COLORS, to3, pedestrian, lidarPuck } from './world.js';
+import { Car } from './car.js';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -23,7 +24,7 @@ window.addEventListener('resize', resize); resize();
 
 const track = new Track();
 const START = startIndexFor(track);
-buildWorld(scene, track);
+const { carGeo } = buildWorld(scene, track);
 
 // a pedestrian strolling along the sidewalk by the crosswalk
 const ped = pedestrian(); scene.add(ped);
@@ -34,26 +35,75 @@ function movePedestrian(t) {
   ped.rotation.y = track.heading(i) + (Math.cos(t * 0.15) > 0 ? 0 : Math.PI);
 }
 
-// Camera: glide along the road, like a robotaxi passenger screen
-let tour = START;
+// ---------- Cars ----------
+const SIM_DT = 1 / 60;
+const heroMat = new THREE.MeshStandardMaterial({ vertexColors: true, color: 0xfefadf, roughness: 0.35, metalness: 0.25, emissive: 0x3a3320, emissiveIntensity: 0.5 });
+const heroMesh = new THREE.Mesh(carGeo, heroMat); heroMesh.add(lidarPuck()); scene.add(heroMesh);
+// soft glow under the car you're watching
+const glow = new THREE.Mesh(new THREE.CircleGeometry(3.4, 40), new THREE.MeshBasicMaterial({ color: COLORS.lamp, transparent: true, opacity: 0.16, depthWrite: false }));
+glow.rotation.x = -Math.PI / 2; scene.add(glow);
+
+function placeMesh(mesh, car, lift = 0) {
+  mesh.position.set(car.x, lift, -car.y);
+  mesh.rotation.y = car.heading;
+}
+
+// ---------- Drive it yourself ----------
+const player = new Car(track, START);
+const keys = { left: false, right: false, gas: false };
+const KEYMAP = { ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', ArrowUp: 'gas', w: 'gas' };
+window.addEventListener('keydown', e => { const k = KEYMAP[e.key]; if (k) { keys[k] = true; e.preventDefault(); } });
+window.addEventListener('keyup', e => { const k = KEYMAP[e.key]; if (k) keys[k] = false; });
+document.querySelectorAll('[data-key]').forEach(btn => {
+  const k = btn.dataset.key;
+  const on = e => { keys[k] = true; btn.classList.add('down'); e.preventDefault(); };
+  const off = () => { keys[k] = false; btn.classList.remove('down'); };
+  btn.addEventListener('pointerdown', on); btn.addEventListener('pointerup', off);
+  btn.addEventListener('pointerleave', off); btn.addEventListener('pointercancel', off);
+});
+let crashTimer = 0;
+function drivePlayer(dt) {
+  if (!player.alive) {
+    crashTimer += dt;
+    if (crashTimer > 1.4) { player.reset(START); crashTimer = 0; toast(''); }
+    return;
+  }
+  player.control((keys.left ? 1 : 0) - (keys.right ? 1 : 0), keys.gas ? 1 : 0.12);
+  player.sense();
+  player.step(dt);
+  if (!player.alive) toast('Crashed! Resetting…');
+}
+
+// ---------- Chase camera ----------
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
-function tourCamera(dt) {
-  tour = (tour + dt * 22) % track.n;
-  const i = Math.floor(tour);
-  const p = track.at(i, LANE / 2), a = track.heading(i);
-  const back = [p[0] - Math.cos(a) * 14, p[1] - Math.sin(a) * 14];
-  const ahead = track.at(i + 24, LANE / 2);
-  camPos.lerp(to3(back[0], back[1], 7), Math.min(1, dt * 3));
-  camLook.lerp(to3(ahead[0], ahead[1], 0), Math.min(1, dt * 3));
+function chase(car, dt, snap = false) {
+  const a = car.heading;
+  const want = to3(car.x - Math.cos(a) * 13, car.y - Math.sin(a) * 13, 6.5);
+  const look = to3(car.x + Math.cos(a) * 12, car.y + Math.sin(a) * 12, 0.5);
+  const k = snap ? 1 : Math.min(1, dt * 3.5);
+  camPos.lerp(want, k); camLook.lerp(look, k);
   camera.position.copy(camPos); camera.lookAt(camLook);
 }
-{ const p = track.at(START, LANE / 2); camPos.copy(to3(p[0] - 14, p[1], 7)); camLook.copy(to3(p[0] + 20, p[1], 0)); }
+chase(player, 0, true);
 
-let last = performance.now(), clock = 0;
+// ---------- HUD ----------
+const $ = id => document.getElementById(id);
+const toastEl = $('toast');
+function toast(msg) { toastEl.textContent = msg; toastEl.classList.toggle('show', !!msg); }
+function hud(car) {
+  $('gen').textContent = 'Drive it yourself';
+  $('sub').textContent = `${Math.round(car.speed * 2.237)} mph · lap ${Math.min(100, Math.round(car.lapFraction() * 100))}%`;
+}
+
+// ---------- Loop ----------
+let last = performance.now(), clock = 0, acc = 0;
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt;
-  tourCamera(dt);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt; acc += dt;
+  while (acc >= SIM_DT) { drivePlayer(SIM_DT); acc -= SIM_DT; }
+  placeMesh(heroMesh, player); placeMesh(glow, player, 0.04);
+  chase(player, dt);
   movePedestrian(clock);
+  hud(player);
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }

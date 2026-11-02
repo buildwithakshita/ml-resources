@@ -61,7 +61,9 @@ export function carGeometry() {
   gl.moveTo(1.08, 0.93); gl.lineTo(0.27, 1.36); gl.quadraticCurveTo(-0.4, 1.44, -1.02, 1.39); gl.lineTo(-1.95, 0.98); gl.lineTo(1.08, 0.93);
   const glass = new THREE.ExtrudeGeometry(gl, { depth: W - 0.02, bevelEnabled: false, curveSegments: 6 });
   glass.translate(0, 0.0, -(W - 0.02) / 2);
-  const parts = [[body, 0xffffff], [glass, 0x10150c]];
+  const tail = new THREE.BoxGeometry(0.08, 0.09, W - 0.3); tail.translate(-2.4, 0.8, 0);
+  const head = new THREE.BoxGeometry(0.06, 0.06, W - 0.5); head.translate(2.42, 0.62, 0);
+  const parts = [[body, 0xffffff], [glass, 0x10150c], [tail, 0xff4a2a], [head, 0xfff6dc]];
   for (const [x, z] of [[1.45, 0.86], [1.45, -0.86], [-1.45, 0.86], [-1.45, -0.86]]) {
     const wh = new THREE.CylinderGeometry(0.36, 0.36, 0.26, 14); wh.rotateX(Math.PI / 2); wh.translate(x, 0.36, z);
     parts.push([wh, 0x070906]);
@@ -179,4 +181,14 @@ export function pedestrian() {
     [new THREE.SphereGeometry(0.2, 10, 8).translate(0, 1.62, 0), 0xb9bdaf],
   ]);
   return new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, emissive: 0x3a3f33, emissiveIntensity: 0.4 }));
+}
+
+// The roof sensor that makes it look like a robotaxi (a lidar "puck").
+export function lidarPuck() {
+  const g = mergeColored([
+    [new THREE.CylinderGeometry(0.42, 0.48, 0.12, 20).translate(0, 1.5, 0), 0x1a2014],
+    [new THREE.CylinderGeometry(0.3, 0.34, 0.26, 20).translate(0, 1.69, 0), 0x2b3324],
+    [new THREE.CylinderGeometry(0.31, 0.31, 0.06, 20).translate(0, 1.72, 0), 0xDDA05E],
+  ]);
+  return new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.4, emissive: 0x2a1e0c, emissiveIntensity: 0.6 }));
 }
