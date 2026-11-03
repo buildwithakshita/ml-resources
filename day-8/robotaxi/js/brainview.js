@@ -24,8 +24,14 @@ export class BrainView {
     ctx.clearRect(0, 0, w, h);
     if (!brain) return;
     const xs = [w * 0.27, w * 0.55, w * 0.8];
-    const ys = LAYERS.map(n => Array.from({ length: n }, (_, i) => n === 1 ? h / 2 : 18 + i * (h - 30) / (n - 1)));
-    ys[2] = [h * 0.33, h * 0.72];
+    const top = 26;   // room for the Sees / Thinks / Decides labels
+    const ys = LAYERS.map(n => Array.from({ length: n }, (_, i) => n === 1 ? h / 2 : top + 8 + i * (h - top - 18) / (n - 1)));
+    ys[2] = [top + (h - top) * 0.3, top + (h - top) * 0.72];
+    // column labels in plain English
+    ctx.font = '700 9.5px Montserrat, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = 'rgba(221,160,94,.95)';
+    [['SEES', xs[0] - 22], ['THINKS', xs[1]], ['DECIDES', xs[2] + 16]].forEach(([t, x]) => { ctx.letterSpacing = '1.5px'; ctx.fillText(t, x, 11); });
+    ctx.letterSpacing = '0px';
     const act = brain.activations;
 
     // connections

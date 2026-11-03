@@ -543,6 +543,33 @@ function drawSpark() {
 
 const brainView = new BrainView($('brain'));
 
+// ---------- The network's decision, in one plain sentence ----------
+const sentence = { text: '', pending: '', since: 0 };
+function brainSentence(car) {
+  if (car.finished) return 'Made it all the way round!';
+  if (!car.alive) return 'Crashed. This brain won\'t be passed on.';
+  const act = car.brain.activations, steer = act[2][0] || 0, gas = act[2][1] || 0;
+  const [fr, r, ahead, l, fl] = car.sensors, R = SENSOR_RANGE;
+  const right = Math.min(fr, r), left = Math.min(fl, l);
+  if (steer > 0.3) return right < 9 ? 'Edge close on the right → <b>steering left</b>' : 'Road bends left → <b>steering left</b>';
+  if (steer < -0.3) return left < 9 ? 'Edge close on the left → <b>steering right</b>' : 'Road bends right → <b>steering right</b>';
+  if (car.speedCap < 1) return 'Stopping for the rider → <b>braking</b>';
+  if (ahead < 18 && gas < 0.5) return 'Corner coming up → <b>slowing down</b>';
+  if (ahead >= R) return gas > 0.6 ? 'Road clear ahead → <b>speeding up</b>' : 'Road clear ahead → <b>cruising</b>';
+  return 'Lane looks fine → <b>going straight</b>';
+}
+function updateBrainSay(car, dt) {
+  const t = brainSentence(car);
+  // only switch once a new decision has lasted a moment, so the text doesn't flicker
+  if (t === sentence.text) { sentence.pending = ''; return; }
+  if (t !== sentence.pending) { sentence.pending = t; sentence.since = 0; }
+  sentence.since += dt;
+  if (sentence.since > 0.25 || !car.alive || car.finished) {
+    sentence.text = t; const el = $('brainSay'); el.innerHTML = t;
+    el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 180);
+  }
+}
+
 // ---------- Controls ----------
 function setMode(m) {
   mode = m;
@@ -656,7 +683,12 @@ function tick(dt) {
   heroMat.color.set(watched.alive || watched.finished ? 0xfefadf : 0x8a5a36);
   showSensors(watched);
   sensorTags(watched, mode !== 'compare' && view !== 'top');
-  if (mode === 'learn' || mode === 'trip') brainView.draw(watched.brain);
+  if (mode === 'learn' || mode === 'trip') {
+    brainView.draw(watched.brain);
+    updateBrainSay(watched, dt);
+    $('brainGen').textContent = mode === 'trip' ? 'Trained' : `Gen ${pop.generation}`;
+    $('brainState').textContent = mode === 'trip' ? '· driving on its own' : '· learning live';
+  }
   if (view === 'top' && mode === 'learn') topCamera(dt, camera, snapCam); else chase(watched, dt, snapCam);
   snapCam = false;
   movePedestrian(clock);

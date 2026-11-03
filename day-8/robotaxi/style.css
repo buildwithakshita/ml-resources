@@ -199,3 +199,19 @@ body.clean .sensor-tags { display: none; }
 body.clean .coach { display: none; }
 @media (max-width: 640px) { .coach { top: calc(max(10px, env(safe-area-inset-top)) + 236px); font-size: 14px; } }
 
+
+/* neural network panel: title, generation badge, the live sentence */
+.brain-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.brain-gen { font: 700 11px var(--body); color: var(--forest); background: var(--tan); padding: 3px 9px; border-radius: 99px; font-variant-numeric: tabular-nums; }
+.brain-say { margin-top: 4px; padding: 7px 10px; border-radius: 10px; background: rgba(254,250,223,.07); font: 600 13px var(--body); color: var(--cream); min-height: 31px; transition: background .2s; }
+.brain-say b { color: var(--tan); font-weight: 700; }
+.brain-say.flash { background: rgba(221,160,94,.2); }
+@media (max-width: 640px) {
+  .tools { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 210px) !important; }
+  body[data-mode="trip"] .tools { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 150px) !important; }
+  body[data-mode="drive"] .tools { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 84px) !important; }
+  body[data-mode="compare"] .tools { bottom: auto !important; }
+  .brain-say { font-size: 12.5px; padding: 6px 9px; min-height: 29px; }
+}
+@media (max-height: 500px) and (orientation: landscape) { .brain-say { font-size: 12px; padding: 5px 8px; min-height: 26px; } }
+@media (min-width: 641px) { .bottom-left { width: 360px; } .brain-head .eyebrow { white-space: nowrap; } }
