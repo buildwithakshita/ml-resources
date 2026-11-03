@@ -104,6 +104,21 @@ function showSensors(car, visible = true) {
   for (const m of [beams, dots]) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
 }
 
+// ---------- Sensor distance labels at the end of each beam ----------
+const tagEls = [...document.querySelectorAll('#sensorTags b')], tagV = new THREE.Vector3();
+function sensorTags(car, on) {
+  tagEls.forEach((el, s) => {
+    if (!on || !car.alive) { el.style.display = 'none'; return; }
+    const d = car.sensors[s], a = car.heading + SENSOR_ANGLES[s];
+    tagV.set(car.x + Math.cos(a) * d, 0.4, -(car.y + Math.sin(a) * d)).project(camera);
+    if (tagV.z > 1) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.style.left = `${(tagV.x * 0.5 + 0.5) * innerWidth}px`; el.style.top = `${(-tagV.y * 0.5 + 0.5) * innerHeight}px`;
+    el.textContent = d >= SENSOR_RANGE ? 'clear' : `${Math.round(d * 3.281)} ft`;
+    el.classList.toggle('near', d < 8);
+  });
+}
+
 // ---------- Drive it yourself ----------
 let player = new Car(track, START);
 // Drive mode: a quicker car with smoothed steering, so it's fast but not twitchy
@@ -161,6 +176,9 @@ function clearProgress() { try { localStorage.removeItem(SAVE_KEY); } catch (e) 
 // ---------- Learning: every generation drives a brand-new road ----------
 // (so the cars learn to drive, not to memorise one road)
 function manyRoads(seedBrain = null, generation = 1) {
+  const p = manyRoadsPop(seedBrain, generation); p.firstGen = generation; return p;
+}
+function manyRoadsPop(seedBrain, generation) {
   const base = newSeed() * 100, roads = new Map();
   const roadFor = g => { if (!roads.has(g)) roads.set(g, randomTrack(base + g + 50)); if (roads.size > 8) roads.delete(roads.keys().next().value); return roads.get(g); };
   const first = roadFor(generation);
@@ -170,19 +188,93 @@ const restored = loadProgress();
 let pop = restored || manyRoads();
 let focus = null, lastGen = pop.generation;
 function pickFocus() {
+  if (celebration.hold > 0 && celebration.car && pop.cars.includes(celebration.car)) return celebration.car;   // stay on the hero
   const lead = pop.leader();
   if (!focus || !pop.cars.includes(focus) || (!focus.alive && lead.alive) || (lead.alive && lead.progress > focus.progress + 25)) focus = lead;
   return focus;
 }
 function learnStep(dt) {
+  const before = pop.cars.filter(c => !c.alive && !c.finished).length;
   pop.step(dt);
+  crashes += Math.max(0, pop.cars.filter(c => !c.alive && !c.finished).length - before);
+  // the very first full lap: celebrate!
+  if (!celebration.done && pop.firstFinish != null) celebrate(pop.cars.find(c => c.finished));
   if (pop.generation !== lastGen) { lastGen = pop.generation; focus = null; onNewGeneration(); }
 }
 function onNewGeneration() {
   if (pop.track !== track) swapRoad(pop.track);
-  toast(`Generation ${pop.generation} · new road`, 1.2);
+  if (coach.showing <= 0) toast(`Generation ${pop.generation} · new road`, 1.2);
   drawSpark();
   saveProgress();
+}
+
+// ---------- Guided first minute: captions that explain what's happening, as it happens ----------
+const coach = { queue: [], showing: 0, seen: new Set(), off: false };
+try { coach.off = localStorage.getItem('mini-robotaxi.guided') === '1'; } catch (e) { /* ignore */ }
+function say(id, html, secs = 4.2) {
+  if (coach.off || coach.seen.has(id)) return;
+  coach.seen.add(id); coach.queue = [{ html, secs }];   // only the newest waits, so captions never show up late
+}
+function coachTick(dt) {
+  const el = document.getElementById('coach');
+  if (celebration.hold > 0) { el.classList.remove('show'); return; }   // the celebration has the stage
+  if (coach.showing > 0) { coach.showing -= dt; if (coach.showing <= 0.35) el.classList.remove('show'); return; }
+  const next = coach.queue.shift();
+  if (next) { el.innerHTML = next.html; el.classList.add('show'); coach.showing = next.secs + 0.35; }
+}
+// what to say, based on what the cars are doing (learn mode only)
+function coachWatch() {
+  if (coach.off || mode !== 'learn') return;
+  const g = pop.generation, dead = pop.cars.filter(c => !c.alive && !c.finished).length;
+  say('start', 'These <b>50 cars</b> have <b>random brains</b>. Watch them try to drive.');
+  if (g === pop.firstGen && dead >= POP / 2) say('crash', 'Most of them crash. That\'s fine, they\'re only guessing.');
+  if (g >= pop.firstGen + 1) say('pass', 'The ones that got <b>furthest</b> pass their brain on, with tiny random tweaks.');
+  if (g >= pop.firstGen + 2) say('road', 'Every generation gets a <b>brand-new road</b>, so they can\'t just memorise one.');
+  if (g >= pop.firstGen + 4) say('climb', 'Keep an eye on <b>best lap</b>. It creeps up as they learn. Try <b>Fast</b> if you\'re impatient.', 5);
+}
+
+// ---------- Milestone: the first full lap ----------
+let crashes = 0;
+const celebration = { done: false, hold: 0, car: null };
+let audio = null;
+// phones only allow sound after a tap, so unlock it on the first touch
+window.addEventListener('pointerdown', () => { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === 'suspended') audio.resume(); } catch (e) { /* no sound */ } }, { once: true });
+function chime() {
+  if (!audio) return;
+  const t0 = audio.currentTime + 0.02;
+  [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => {
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = i < 4 ? 'triangle' : 'sine'; o.frequency.value = f;
+    const t = t0 + i * 0.09;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.18, t + 0.015); g.gain.exponentialRampToValueAtTime(0.001, t + (i === 4 ? 1.2 : 0.5));
+    o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 1.3);
+  });
+}
+function celebrate(car) {
+  celebration.done = true; celebration.car = car; celebration.hold = 3.2; snapCam = true;
+  $('celeGen').textContent = `Generation ${pop.generation}`;
+  $('celeSub').textContent = `First full lap, after ${crashes.toLocaleString()} crashes`;
+  const el = $('celebrate'); el.hidden = false;
+  el.querySelector('.cele-card').style.animation = 'none'; void el.offsetWidth; el.querySelector('.cele-card').style.animation = '';
+  chime(); confetti();
+  setTimeout(() => { el.hidden = true; }, 3400);
+  say('robotaxi', 'It learned to drive by itself. Now tap <b>Book a robotaxi</b> 🚕', 5);
+  say('done', 'Or <b>Take the wheel</b> and see if you drive better than it does 😏', 4.5);
+  setTimeout(() => { try { localStorage.setItem('mini-robotaxi.guided', '1'); } catch (e) { /* ignore */ } }, 12000);
+}
+function confetti() {
+  const cv = $('confetti'), ctx = cv.getContext('2d'), d = Math.min(2, devicePixelRatio || 1);
+  cv.width = innerWidth * d; cv.height = innerHeight * d;
+  const cols = ['#DDA05E', '#FEFADF', '#BC6C25', '#5F6C37', '#e7b04e'];
+  const P = Array.from({ length: 140 }, () => ({ x: innerWidth / 2 + (Math.random() - 0.5) * 80, y: innerHeight * 0.42, vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 13 - 4, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.4, w: 5 + Math.random() * 6, h: 8 + Math.random() * 8, c: cols[Math.floor(Math.random() * cols.length)] }));
+  const t0 = performance.now();
+  (function draw(now) {
+    const t = (now - t0) / 1000;
+    ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, innerWidth, innerHeight);
+    for (const p of P) { p.vy += 0.38; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.globalAlpha = Math.max(0, 1 - t / 3.2); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore(); }
+    if (t < 3.3) requestAnimationFrame(draw); else ctx.clearRect(0, 0, innerWidth, innerHeight);
+  })(t0);
 }
 
 // ---------- Chase camera ----------
@@ -390,7 +482,9 @@ function tripCard() {
 }
 
 // Swap the whole city for a new road (each generation brings its own).
+let snapCam = false;   // jump the camera (instead of gliding through buildings) after a road change
 function swapRoad(t) {
+  snapCam = true;
   disposeWorld(scene, world);
   track = t; START = startIndexFor(track);
   world = buildWorld(scene, track).group;
@@ -432,7 +526,7 @@ function hud() {
   $('sub').textContent = `${pop.alive} of ${POP} still driving`;
   $('lapPct').textContent = `${Math.round(lap * 100)}%`;
   $('lapBar').style.width = `${lap * 100}%`;
-  $('lapTime').textContent = pop.bestLapTime ? `best lap ${pop.bestLapTime.toFixed(1)}s` : 'no full lap yet';
+  $('lapTime').textContent = pop.bestLapTime ? `best lap ${pop.bestLapTime.toFixed(1)}s` : pop.firstFinish != null ? 'full lap! 🎉' : 'no full lap yet';
 }
 const spark = $('spark'), sctx = spark.getContext('2d');
 function drawSpark() {
@@ -477,7 +571,7 @@ document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click
   document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('on', x === b));
 }));
 $('restart').addEventListener('click', () => {
-  clearProgress();
+  clearProgress(); crashes = 0; celebration.done = false;
   pop = manyRoads();   // fresh random brains
   swapRoad(pop.track); lastGen = pop.generation; focus = null; drawSpark(); toast('New cars, random brains', 1.4);
 });
@@ -498,12 +592,14 @@ $('aboutBtn').addEventListener('click', openAbout);
 $('aboutClose').addEventListener('click', closeAbout);
 about.addEventListener('click', e => { if (e.target === about) closeAbout(); });
 let seen = false; try { seen = localStorage.getItem('mini-robotaxi.seen') === '1'; } catch (e) { /* ignore */ }
-if (!seen && !new URLSearchParams(location.search).has('noabout')) openAbout();
+void seen;   // "How it works" is now opened from its button; the guided captions explain things on the first visit
 
 swapRoad(pop.track);
 setMode('learn');
+chase(pop.cars[0], 0, true);   // start with the camera behind the cars
 drawSpark();
 $('roadName').textContent = roadName(track);
+if (restored && pop.bestLapTime) celebration.done = true;   // already celebrated on this phone
 if (restored) setTimeout(() => toast(`Welcome back · generation ${pop.generation}`, 2.2), 600);
 document.addEventListener('visibilitychange', () => { if (document.hidden) saveProgress(); });
 
@@ -511,13 +607,14 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) saveP
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
-window.__robotaxi = { get pop() { return pop; }, get focus() { return focus; }, get track() { return track; }, trip, tripStep, learnStep };   // handy for debugging in the console
+window.__robotaxi = { get pop() { return pop; }, get focus() { return focus; }, get track() { return track; }, trip, tripStep, learnStep, celebration };   // handy for debugging in the console
 
 // ---------- Loop ----------
 let last = performance.now(), clock = 0, acc = 0;
 function tick(dt) {
   clock += dt;
   if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toast(''); }
+  coachWatch(); coachTick(dt);
   let watched;
   if (mode === 'compare') {
     acc += dt;
@@ -541,6 +638,11 @@ function tick(dt) {
     drawRoute(watched);
     const pulse = 1 + Math.sin(clock * 4) * 0.12;
     for (const pin of [pickupPin, dropPin]) pin.children[1].scale.setScalar(pulse);
+  } else if (celebration.hold > 0) {
+    // the big moment: pause learning and stay on the car that just finished
+    celebration.hold -= dt; acc = 0;
+    watched = celebration.car;
+    drawFleet(pop.cars, watched);
   } else {
     acc += dt * simSpeed;
     let n = 0;
@@ -553,8 +655,10 @@ function tick(dt) {
   heroMesh.visible = glow.visible = true;
   heroMat.color.set(watched.alive || watched.finished ? 0xfefadf : 0x8a5a36);
   showSensors(watched);
+  sensorTags(watched, mode !== 'compare' && view !== 'top');
   if (mode === 'learn' || mode === 'trip') brainView.draw(watched.brain);
-  if (view === 'top' && mode === 'learn') topCamera(dt); else chase(watched, dt);
+  if (view === 'top' && mode === 'learn') topCamera(dt, camera, snapCam); else chase(watched, dt, snapCam);
+  snapCam = false;
   movePedestrian(clock);
   hud();
   renderer.render(scene, camera);

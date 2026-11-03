@@ -1,5 +1,5 @@
 // Offline support: after the first visit, everything is served from the phone's cache.
-const CACHE = 'mini-robotaxi-v4';
+const CACHE = 'mini-robotaxi-v5';
 const FILES = ["./", "index.html", "style.css", "manifest.webmanifest", "js/brainview.js", "js/car.js", "js/evolve.js", "js/main.js", "js/nn.js", "js/pretrained.js", "js/track.js", "js/world.js", "vendor/three.module.min.js", "fonts/Montserrat_400Regular.woff2", "fonts/Montserrat_600SemiBold.woff2", "fonts/Montserrat_700Bold.woff2", "fonts/PlayfairDisplay_600SemiBold_Italic.woff2", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png"];
 
 self.addEventListener("install", e => {
