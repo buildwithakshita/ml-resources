@@ -526,7 +526,7 @@ function hud() {
   $('sub').textContent = `${pop.alive} of ${POP} still driving`;
   $('lapPct').textContent = `${Math.round(lap * 100)}%`;
   $('lapBar').style.width = `${lap * 100}%`;
-  $('lapTime').textContent = pop.bestLapTime ? `best lap ${pop.bestLapTime.toFixed(1)}s` : pop.firstFinish != null ? 'full lap! 🎉' : 'no full lap yet';
+  $('lapTime').textContent = pop.bestLapTime ? `best lap ${pop.bestLapTime.toFixed(1)}s` : pop.firstFinish != null ? 'full lap!' : 'no full lap yet';
 }
 const spark = $('spark'), sctx = spark.getContext('2d');
 function drawSpark() {
