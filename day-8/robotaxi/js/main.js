@@ -5,7 +5,7 @@ import { Car, SENSOR_ANGLES, SENSOR_RANGE } from './car.js';
 import { Population, POP } from './evolve.js';
 import { Brain } from './nn.js';
 import { BrainView } from './brainview.js';
-import { PRETRAINED, PRETRAINED_INFO, PRETRAINED_ONE_ROAD, ONE_ROAD_INFO } from './pretrained.js';
+import { PRETRAINED, PRETRAINED_INFO } from './pretrained.js';
 
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -47,8 +47,8 @@ function movePedestrian(t) {
 const SIM_DT = 1 / 60;
 let mode = 'learn';          // 'learn' | 'drive' | 'compare' | 'trip'
 let view = 'chase';          // 'chase' | 'top'
-let simSpeed = 1;           // 1×, 3× or 10× for learning
-let trainOn = 'one';         // 'one' road, or 'many' (a new road every generation)
+let simSpeed = 3;            // Normal = 3× real time, Fast = 8×, Turbo = 20×
+const TRIP_SPEED = 2;        // robotaxi mode plays at 2× so trips don't drag
 const heroMat = new THREE.MeshStandardMaterial({ vertexColors: true, color: 0xfefadf, roughness: 0.35, metalness: 0.25, emissive: 0x3a3320, emissiveIntensity: 0.5 });
 const heroMesh = new THREE.Mesh(carGeo, heroMat); heroMesh.add(lidarPuck()); scene.add(heroMesh);
 // soft glow under the car you're watching
@@ -106,6 +106,9 @@ function showSensors(car, visible = true) {
 
 // ---------- Drive it yourself ----------
 let player = new Car(track, START);
+// Drive mode: a quicker car with smoothed steering, so it's fast but not twitchy
+function tunePlayer(c) { c.maxSpeed = 23; c.steerRate = 1.9; c.smoothSteer = 0; return c; }
+tunePlayer(player);
 const keys = { left: false, right: false, gas: false };
 const KEYMAP = { ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', ArrowUp: 'gas', w: 'gas' };
 window.addEventListener('keydown', e => { const k = KEYMAP[e.key]; if (k) { keys[k] = true; e.preventDefault(); } });
@@ -121,10 +124,13 @@ let crashTimer = 0;
 function drivePlayer(dt) {
   if (!player.alive) {
     crashTimer += dt;
-    if (crashTimer > 1.4) { player.reset(START); crashTimer = 0; toast(''); }
+    if (crashTimer > 0.9) { player.reset(START); player.smoothSteer = 0; crashTimer = 0; toast(''); }
     return;
   }
-  player.control((keys.left ? 1 : 0) - (keys.right ? 1 : 0), keys.gas ? 1 : 0.12);
+  // ease the wheel towards where you're pressing instead of snapping, so taps feel smooth
+  const want = (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
+  player.smoothSteer += (want - player.smoothSteer) * Math.min(1, dt * 7);
+  player.control(player.smoothSteer, keys.gas ? 1 : 0.45);
   player.sense();
   player.step(dt);
   if (!player.alive) toast('Crashed! Resetting…');
@@ -132,14 +138,12 @@ function drivePlayer(dt) {
 
 // ---------- Saved progress (this phone / browser only) ----------
 const SAVE_KEY = 'mini-robotaxi.v1';
-let savedRoad = null;   // a generated road to restore once everything is set up
 function saveProgress() {
   if (!pop.champion) return;
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       generation: pop.generation, champion: pop.champion.toJSON(), championScore: pop.championScore,
       bestLapTime: pop.bestLapTime || null, history: pop.history.slice(-60),
-      road: pop.roadFor ? null : track.seed, trainOn,
     }));
   } catch (e) { /* private mode or storage full: just don't save */ }
 }
@@ -147,17 +151,23 @@ function loadProgress() {
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
     if (!d || !d.champion) return null;
-    savedRoad = d.road != null && d.trainOn !== 'many' ? d.road : null;
-    const p = new Population(track, START, new Brain(d.champion), d.generation);
+    const p = manyRoads(new Brain(d.champion), d.generation);
     p.championScore = d.championScore || 0; p.bestLapTime = d.bestLapTime || undefined; p.history = d.history || [];
     return p;
   } catch (e) { return null; }
 }
 function clearProgress() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ } }
 
-// ---------- Learning ----------
+// ---------- Learning: every generation drives a brand-new road ----------
+// (so the cars learn to drive, not to memorise one road)
+function manyRoads(seedBrain = null, generation = 1) {
+  const base = newSeed() * 100, roads = new Map();
+  const roadFor = g => { if (!roads.has(g)) roads.set(g, randomTrack(base + g + 50)); if (roads.size > 8) roads.delete(roads.keys().next().value); return roads.get(g); };
+  const first = roadFor(generation);
+  return new Population(first, startIndexFor(first), seedBrain, generation, roadFor);
+}
 const restored = loadProgress();
-let pop = restored || new Population(track, START);
+let pop = restored || manyRoads();
 let focus = null, lastGen = pop.generation;
 function pickFocus() {
   const lead = pop.leader();
@@ -169,8 +179,8 @@ function learnStep(dt) {
   if (pop.generation !== lastGen) { lastGen = pop.generation; focus = null; onNewGeneration(); }
 }
 function onNewGeneration() {
-  if (pop.track !== track) swapRoad(pop.track, false);
-  toast(pop.roadFor ? `Generation ${pop.generation} · new road` : `Generation ${pop.generation}`, 1.2);
+  if (pop.track !== track) swapRoad(pop.track);
+  toast(`Generation ${pop.generation} · new road`, 1.2);
   drawSpark();
   saveProgress();
 }
@@ -299,7 +309,8 @@ function stopProgress(car, stopIdx) {
   return t;
 }
 function tripBrain() {
-  if (pop.champion && pop.bestLapTime) { trip.brainNote = `Driven by your generation ${pop.generation - 1} brain`; return new Brain(pop.champion.toJSON()); }
+  // your own brain once it reliably finishes every practice road; until then the well-trained one
+  if (pop.champion && pop.championScore >= 1) { trip.brainNote = `Driven by your generation ${pop.generation - 1} brain`; return new Brain(pop.champion.toJSON()); }
   trip.brainNote = `Driven by a pre-trained brain (trained on ${PRETRAINED_INFO.generations} different roads)`;
   return new Brain(PRETRAINED);
 }
@@ -342,14 +353,14 @@ function tripStep(dt) {
   if (trip.phase === 'boarding') {
     trip.wait += dt;
     // the rider walks to the car and hops in
-    const k = Math.min(1, trip.wait / 2.2);
+    const k = Math.min(1, trip.wait / 1.5);
     const from = track.at(trip.pickIdx, LANE + PARK + 1.2), to = [c.x, c.y];
     rider.position.copy(to3(from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k, 0.16 * (1 - k)));
     rider.scale.setScalar(k > 0.85 ? Math.max(0.01, (1 - k) / 0.15) : 1);
-    if (trip.wait > 2.6) { rider.visible = false; beginLeg('toDrop'); }
+    if (trip.wait > 1.8) { rider.visible = false; beginLeg('toDrop'); }
   } else if (trip.phase === 'arrived') {
     trip.wait += dt;
-    if (trip.wait > 2.4) { trip.done++; trip.k = (trip.k + 1) % STOPS.length; beginLeg('toPickup'); }
+    if (trip.wait > 1.2) { trip.done++; trip.k = (trip.k + 1) % STOPS.length; beginLeg('toPickup'); }
   }
 }
 function drawRoute(car) {
@@ -378,86 +389,17 @@ function tripCard() {
   $('tripCount').textContent = `${trip.done} trip${trip.done === 1 ? '' : 's'} completed`;
 }
 
-// ---------- New road: did it learn to drive, or just memorise one road? ----------
-const test = { car: null, brainKind: 'yours', result: null, chips: [] };
-const BRAINS = {
-  yours: () => pop.champion && pop.bestLapTime ? { brain: pop.champion, label: `Your brain · generation ${pop.generation - 1}` } : null,
-  memorised: () => ({ brain: PRETRAINED_ONE_ROAD, label: `Memorised · trained on the city block only` }),
-  many: () => ({ brain: PRETRAINED, label: `Trained on ${PRETRAINED_INFO.generations} different roads` }),
-};
-function testBrain() { return (BRAINS[test.brainKind]() || BRAINS.memorised()); }
-function startTest() {
-  if (test.brainKind === 'yours' && !BRAINS.yours()) { test.brainKind = 'many'; markBrainButtons(); toast('Your cars haven\'t learned a lap yet, so using the many-roads brain', 2.4); }
-  const b = testBrain();
-  test.car = new Car(track, START, new Brain(b.brain.toJSON ? b.brain.toJSON() : b.brain));
-  test.result = null; test.label = b.label;
-  chase(test.car, 0, true);
-}
-function testStep(dt) {
-  const c = test.car;
-  if (test.result) return;
-  c.sense(); c.think(); c.step(dt);
-  if (c.bestProgress >= track.length) { test.result = 'pass'; c.speedCap = 0; toast('✓ Made it round a road it has never seen', 2.6); }
-  else if (!c.alive) { test.result = 'fail'; toast(`✕ Crashed at ${Math.round(c.lapFraction() * 100)}% of the lap`, 2.6); }
-}
-// after a pass, keep cruising (gently) so the shot doesn't freeze
-function testCruise(dt) { const c = test.car; if (test.result === 'pass' && c.alive) { c.speedCap = Infinity; c.sense(); c.think(); c.step(dt); } }
-function newRoad(seed = newSeed()) {
-  swapRoad(randomTrack(seed));
-  if (mode === 'test') startTest();
-}
-// Quick exam: 5 brand-new roads, no watching, just the score.
-function lapsOn(brain, t) {
-  const c = new Car(t, startIndexFor(t), new Brain(brain.toJSON ? brain.toJSON() : brain));
-  while (c.alive && c.bestProgress < t.length && c.time < 70) { c.sense(); c.think(); c.step(SIM_DT); }
-  return c.bestProgress >= t.length;
-}
-function roadExam() {
-  const b = testBrain(), seeds = Array.from({ length: 5 }, () => newSeed());
-  test.chips = seeds.map(sd => ({ seed: sd, ok: lapsOn(b.brain, randomTrack(sd)) }));
-  drawChips();
-}
-function drawChips() {
-  const el = $('chips'); el.innerHTML = '';
-  if (!test.chips.length) return;
-  const ok = test.chips.filter(c => c.ok).length;
-  test.chips.forEach(c => {
-    const b = document.createElement('button');
-    b.className = 'chip ' + (c.ok ? 'ok' : 'no'); b.textContent = c.ok ? '✓' : '✕';
-    b.title = `Road #${c.seed}: tap to watch`;
-    b.addEventListener('click', () => newRoad(c.seed));
-    el.appendChild(b);
-  });
-  const t = document.createElement('span'); t.className = 'chip-score';
-  t.textContent = `${ok} of 5 new roads`; el.appendChild(t);
-}
-function markBrainButtons() { document.querySelectorAll('[data-brain]').forEach(b => b.classList.toggle('on', b.dataset.brain === test.brainKind)); }
-function testCard() {
-  const c = test.car;
-  $('testTitle').textContent = test.result === 'pass' ? 'Passed ✓' : test.result === 'fail' ? 'Crashed ✕' : 'Never seen this road before';
-  $('testRoad').textContent = roadName(track);
-  $('testBar').style.width = `${Math.min(100, c.lapFraction() * 100)}%`;
-  $('testPct').textContent = `${Math.min(100, Math.round(c.lapFraction() * 100))}% of the lap`;
-  $('testNote').textContent = test.result === 'pass' ? 'It learned to drive, not just one road.'
-    : test.result === 'fail' ? 'It memorised its old road. Teach it this one, or try a brain trained on many roads.'
-    : test.label;
-}
-
-// Swap the whole city for a new road. keepPop = the population is already on it (many-roads training).
-function swapRoad(t, resetLearning = true) {
+// Swap the whole city for a new road (each generation brings its own).
+function swapRoad(t) {
   disposeWorld(scene, world);
   track = t; START = startIndexFor(track);
   world = buildWorld(scene, track).group;
   BOX = track.bounds(); CENTRE = to3(BOX.cx, BOX.cy, 0);
   placeStops();
-  player = new Car(track, START);
-  if (resetLearning && pop && !pop.roadFor) { pop.track = track; pop.start = START; pop.spawn(pop.cars.map(c => c.brain)); focus = null; }
+  player = tunePlayer(new Car(track, START));
   if (mode === 'trip') startTrips();
   if (mode === 'compare') startCompare();
-  if (mode === 'drive') player.reset(START);
-  if (mode === 'test' && test.car && test.car.track !== track) startTest();
-  if (typeof $ === 'function' && $('roadName')) if (savedRoad != null) swapRoad(randomTrack(savedRoad));
-$('roadName').textContent = roadName(track);
+  $('roadName').textContent = roadName(track);
 }
 
 // ---------- HUD ----------
@@ -469,12 +411,6 @@ function toast(msg, secs = 0) {
   toastEl.classList.toggle('info', !!msg && secs > 0); toastTimer = secs;
 }
 function hud() {
-  if (mode === 'test') {
-    $('gen').textContent = 'New road test';
-    $('sub').textContent = `${Math.round(test.car.speed * 2.237)} mph · no extra training`;
-    testCard();
-    return;
-  }
   if (mode === 'trip') {
     $('gen').textContent = 'Robotaxi mode';
     $('sub').textContent = `${Math.round(trip.car.speed * 2.237)} mph · no one in the driver's seat`;
@@ -493,7 +429,7 @@ function hud() {
   }
   const lap = Math.min(1, pop.bestLap());
   $('gen').textContent = `Generation ${pop.generation}`;
-  $('sub').textContent = `${pop.alive} of ${POP} still driving${pop.roadFor ? ' · new road each generation' : ''}`;
+  $('sub').textContent = `${pop.alive} of ${POP} still driving`;
   $('lapPct').textContent = `${Math.round(lap * 100)}%`;
   $('lapBar').style.width = `${lap * 100}%`;
   $('lapTime').textContent = pop.bestLapTime ? `best lap ${pop.bestLapTime.toFixed(1)}s` : 'no full lap yet';
@@ -521,11 +457,6 @@ function setMode(m) {
   if (m === 'drive') { player.reset(START); chase(player, 0, true); toast(''); }
   else if (m === 'compare') { startCompare(); toast(''); }
   else if (m === 'trip') { startTrips(); chase(trip.car, 0, true); toast(''); }
-  else if (m === 'test') {
-    if (pop.roadFor) setTrainOn('one', false);
-    if (track.seed === null || !test.car) newRoad(); else startTest();
-    toast('');
-  }
   else { focus = null; }
   if (m !== 'trip') { pickupPin.visible = dropPin.visible = rider.visible = route.visible = false; }
 }
@@ -540,38 +471,6 @@ $('compareBtn').addEventListener('click', () => {
   setMode('compare');
 });
 $('backBtn').addEventListener('click', () => setMode('learn'));
-$('newRoadBtn').addEventListener('click', () => newRoad());
-$('examBtn').addEventListener('click', () => { roadExam(); });
-$('learnHereBtn').addEventListener('click', () => {
-  // keep the brain that was tested, and let 50 cars evolve from it on this road
-  const b = testBrain().brain;
-  pop = new Population(track, START, new Brain(b.toJSON ? b.toJSON() : b), Math.max(1, pop.generation));
-  lastGen = pop.generation; focus = null; setTrainOn('one', false);
-  setMode('learn'); drawSpark(); toast(`Learning ${roadName(track)}`, 1.8);
-});
-document.querySelectorAll('[data-brain]').forEach(b => b.addEventListener('click', () => {
-  test.brainKind = b.dataset.brain; markBrainButtons(); test.chips = []; drawChips(); startTest();
-}));
-function setTrainOn(v, rebuild = true) {
-  trainOn = v;
-  document.querySelectorAll('[data-train]').forEach(b => b.classList.toggle('on', b.dataset.train === v));
-  if (!rebuild) return;
-  const seed = pop.champion ? new Brain(pop.champion.toJSON()) : null;
-  if (v === 'many') {
-    const base = newSeed() * 100;
-    const roads = new Map();
-    const roadFor = g => { if (!roads.has(g)) roads.set(g, randomTrack(base + g + 50)); return roads.get(g); };
-    const first = roadFor(pop.generation);
-    pop = new Population(first, startIndexFor(first), seed, pop.generation, roadFor);
-    swapRoad(first, false);
-    toast('A brand-new road every generation', 2);
-  } else {
-    pop = new Population(track, START, seed, pop.generation);
-    toast(`Learning ${roadName(track)} only`, 1.8);
-  }
-  lastGen = pop.generation; focus = null;
-}
-document.querySelectorAll('[data-train]').forEach(b => b.addEventListener('click', () => { if (b.dataset.train !== trainOn) setTrainOn(b.dataset.train); }));
 document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => {
   simSpeed = +b.dataset.speed;
@@ -579,8 +478,9 @@ document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click
 }));
 $('restart').addEventListener('click', () => {
   clearProgress();
-  pop = new Population(track, START);   // fresh random brains
-  if (trainOn === 'many') { pop.champion = null; setTrainOn('many'); } lastGen = pop.generation; focus = null; drawSpark(); toast('New cars, random brains', 1.4); });
+  pop = manyRoads();   // fresh random brains
+  swapRoad(pop.track); lastGen = pop.generation; focus = null; drawSpark(); toast('New cars, random brains', 1.4);
+});
 // clean view: hide every button for screen recording; tap the screen to bring them back
 const cleanHint = $('cleanHint');
 $('cleanBtn').addEventListener('click', () => {
@@ -600,6 +500,7 @@ about.addEventListener('click', e => { if (e.target === about) closeAbout(); });
 let seen = false; try { seen = localStorage.getItem('mini-robotaxi.seen') === '1'; } catch (e) { /* ignore */ }
 if (!seen && !new URLSearchParams(location.search).has('noabout')) openAbout();
 
+swapRoad(pop.track);
 setMode('learn');
 drawSpark();
 $('roadName').textContent = roadName(track);
@@ -610,7 +511,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) saveP
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
-window.__robotaxi = { get pop() { return pop; }, get focus() { return focus; }, get track() { return track; }, trip, tripStep, learnStep, test, testStep, newRoad, roadExam, setTrainOn };   // handy for debugging in the console
+window.__robotaxi = { get pop() { return pop; }, get focus() { return focus; }, get track() { return track; }, trip, tripStep, learnStep };   // handy for debugging in the console
 
 // ---------- Loop ----------
 let last = performance.now(), clock = 0, acc = 0;
@@ -632,13 +533,8 @@ function tick(dt) {
     while (acc >= SIM_DT) { drivePlayer(SIM_DT); acc -= SIM_DT; }
     watched = player;
     fleet.count = 0;
-  } else if (mode === 'test') {
-    acc += dt;
-    while (acc >= SIM_DT) { testStep(SIM_DT); testCruise(SIM_DT); acc -= SIM_DT; }
-    watched = test.car;
-    fleet.count = 0;
   } else if (mode === 'trip') {
-    acc += dt;
+    acc += dt * TRIP_SPEED;
     while (acc >= SIM_DT) { tripStep(SIM_DT); acc -= SIM_DT; }
     watched = trip.car;
     fleet.count = 0;
@@ -648,8 +544,8 @@ function tick(dt) {
   } else {
     acc += dt * simSpeed;
     let n = 0;
-    while (acc >= SIM_DT && n < 240) { learnStep(SIM_DT); acc -= SIM_DT; n++; }
-    if (n >= 240) acc = 0;
+    while (acc >= SIM_DT && n < 400) { learnStep(SIM_DT); acc -= SIM_DT; n++; }
+    if (n >= 400) acc = 0;
     watched = pickFocus();
     drawFleet(pop.cars, watched);
   }
@@ -657,7 +553,7 @@ function tick(dt) {
   heroMesh.visible = glow.visible = true;
   heroMat.color.set(watched.alive || watched.finished ? 0xfefadf : 0x8a5a36);
   showSensors(watched);
-  if (mode === 'learn' || mode === 'trip' || mode === 'test') brainView.draw(watched.brain);
+  if (mode === 'learn' || mode === 'trip') brainView.draw(watched.brain);
   if (view === 'top' && mode === 'learn') topCamera(dt); else chase(watched, dt);
   movePedestrian(clock);
   hud();

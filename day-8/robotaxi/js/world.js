@@ -6,6 +6,11 @@ export const PARK = 2.6;      // parking strip width (m)
 export const WALK = 3.2;      // sidewalk width (m)
 export const to3 = (x, y, h = 0) => new THREE.Vector3(x, h, -y);
 
+// Materials and fixed shapes are made once and reused for every road, so switching roads
+// only uploads the new road shape (no new shaders, much less GPU work on phones).
+const KEEP = new Map();
+function keep(key, make) { if (!KEEP.has(key)) { const v = make(); v.userData = { ...(v.userData || {}), keep: true }; KEEP.set(key, v); } return KEEP.get(key); }
+
 export const COLORS = {
   sky: 0x0a0d08, ground: 0x0c1009, road: 0x262c22, walk: 0x30382a, curb: 0x4a5540,
   yellow: 0xE7B04E, white: 0xcfd3c2, building: 0x161d11, edge: 0x56693c,
@@ -26,7 +31,7 @@ function ribbon(track, offA, offB, h, color, every = 1, emissive = 0) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setIndex(idx); g.computeVertexNormals();
-  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, emissive: emissive ? color : 0x000000, emissiveIntensity: emissive, side: THREE.DoubleSide });
+  const m = keep(`ribbon-${color}-${emissive}`, () => new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, emissive: emissive ? color : 0x000000, emissiveIntensity: emissive, side: THREE.DoubleSide }));
   return new THREE.Mesh(g, m);
 }
 
@@ -75,7 +80,7 @@ export function carGeometry() {
 // Everything that doesn't move: road, markings, sidewalks, crosswalk, buildings, lamps, parked cars.
 export function buildWorld(scene, track) {
   const group = new THREE.Group();
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 1 }));
+  const ground = new THREE.Mesh(keep('ground-geo', () => new THREE.PlaneGeometry(900, 900)), keep('ground', () => new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 1 })));
   const GB = track.bounds();
   ground.rotation.x = -Math.PI / 2; ground.position.set(GB.cx, -0.05, -GB.cy);
   group.add(ground);
@@ -98,11 +103,12 @@ export function buildWorld(scene, track) {
   let cw;
   if (track.seed === null) cw = track.nearest(55, 120, 0, 0, track.n - 1);
   else { const st = straights(track); const s2 = st[1] || st[0]; cw = (s2.start + Math.floor(s2.length / 2)) % track.n; }
-  const stripeMat = new THREE.MeshStandardMaterial({ color: COLORS.white, roughness: 0.8, emissive: COLORS.white, emissiveIntensity: 0.18 });
+  const stripeMat = keep('stripe', () => new THREE.MeshStandardMaterial({ color: COLORS.white, roughness: 0.8, emissive: COLORS.white, emissiveIntensity: 0.18 }));
+  const stripeGeo = keep('stripe-geo', () => new THREE.PlaneGeometry(3.2, 0.55));
   const head = track.heading(cw);
   for (let off = -LANE - PARK + 0.8; off <= LANE + PARK - 0.6; off += 1.2) {
     const p = track.at(cw, off);
-    const s = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.55), stripeMat);
+    const s = new THREE.Mesh(stripeGeo, stripeMat);
     s.rotation.x = -Math.PI / 2; s.rotation.z = head;
     s.position.copy(to3(p[0], p[1], 0.03));
     group.add(s);
@@ -128,7 +134,7 @@ export function buildWorld(scene, track) {
       boxes.push([bx, by, w, d, h]);
     }
   }
-  const bMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: COLORS.building, roughness: 0.85, metalness: 0.1, emissive: 0x111709, emissiveIntensity: 1 }), boxes.length);
+  const bMesh = new THREE.InstancedMesh(keep('box-geo', () => new THREE.BoxGeometry(1, 1, 1)), keep('building', () => new THREE.MeshStandardMaterial({ color: COLORS.building, roughness: 0.85, metalness: 0.1, emissive: 0x111709, emissiveIntensity: 1 })), boxes.length);
   const m4 = new THREE.Matrix4(), edgePos = [];
   boxes.forEach(([x, y, w, d, h], i) => {
     m4.compose(new THREE.Vector3(x, h / 2, -y), new THREE.Quaternion(), new THREE.Vector3(w, h, d));
@@ -140,18 +146,18 @@ export function buildWorld(scene, track) {
   });
   group.add(bMesh);
   const eg = new THREE.BufferGeometry(); eg.setAttribute('position', new THREE.Float32BufferAttribute(edgePos, 3));
-  group.add(new THREE.LineSegments(eg, new THREE.LineBasicMaterial({ color: COLORS.edge, transparent: true, opacity: 0.4 })));
+  group.add(new THREE.LineSegments(eg, keep('edge', () => new THREE.LineBasicMaterial({ color: COLORS.edge, transparent: true, opacity: 0.4 }))));
 
   // street lamps along the outer sidewalk
   const lampSpots = [];
   for (let i = 0; i < track.n; i += 50) lampSpots.push(track.at(i, LANE + PARK + 0.9));
-  const poles = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.08, 0.1, 5, 6).translate(0, 2.5, 0), new THREE.MeshStandardMaterial({ color: 0x313b28, roughness: 0.7 }), lampSpots.length);
-  const heads = new THREE.InstancedMesh(new THREE.SphereGeometry(0.28, 10, 8).translate(0, 5.1, 0), new THREE.MeshBasicMaterial({ color: COLORS.lamp }), lampSpots.length);
+  const poles = new THREE.InstancedMesh(keep('pole-geo', () => new THREE.CylinderGeometry(0.08, 0.1, 5, 6).translate(0, 2.5, 0)), keep('pole', () => new THREE.MeshStandardMaterial({ color: 0x313b28, roughness: 0.7 })), lampSpots.length);
+  const heads = new THREE.InstancedMesh(keep('lamp-geo', () => new THREE.SphereGeometry(0.28, 10, 8).translate(0, 5.1, 0)), keep('lamp', () => new THREE.MeshBasicMaterial({ color: COLORS.lamp })), lampSpots.length);
   lampSpots.forEach(([x, y], i) => { m4.makeTranslation(x, 0.16, -y); poles.setMatrixAt(i, m4); heads.setMatrixAt(i, m4); });
   group.add(poles, heads);
 
   // parked cars on both parking strips (not near corners or the crosswalk)
-  const carGeo = carGeometry();
+  const carGeo = keep('parked-car-geo', carGeometry);
   const spots = [];
   for (let i = 0; i < track.n; i += 14) {
     const nearCrosswalk = Math.min(Math.abs(i - cw), track.n - Math.abs(i - cw)) < 30;
@@ -161,7 +167,7 @@ export function buildWorld(scene, track) {
     const p = track.at(i, side * (LANE + PARK / 2));
     spots.push([p[0], p[1], track.heading(i) + (side < 0 ? Math.PI : 0)]);
   }
-  const parked = new THREE.InstancedMesh(carGeo, new THREE.MeshStandardMaterial({ vertexColors: true, color: COLORS.parked, roughness: 0.5, metalness: 0.2 }), spots.length);
+  const parked = new THREE.InstancedMesh(carGeo, keep('parked', () => new THREE.MeshStandardMaterial({ vertexColors: true, color: COLORS.parked, roughness: 0.5, metalness: 0.2 })), spots.length);
   spots.forEach(([x, y, a], i) => {
     m4.compose(new THREE.Vector3(x, 0, -y), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), a), new THREE.Vector3(1, 1, 1));
     parked.setMatrixAt(i, m4);
@@ -202,7 +208,7 @@ export function lidarPuck() {
 export function disposeWorld(scene, group) {
   scene.remove(group);
   group.traverse(o => {
-    if (o.geometry) o.geometry.dispose();
-    if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.dispose());
+    if (o.geometry && !o.geometry.userData.keep) o.geometry.dispose();
+    if (o.isInstancedMesh) o.dispose();   // frees the per-instance buffers; shared shapes and materials stay
   });
 }

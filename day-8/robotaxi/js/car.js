@@ -29,6 +29,7 @@ export class Car {
     this.bestProgress = 0;
     this.steer = 0; this.throttle = 0.5;
     this.speedCap = Infinity;     // robotaxi mode lowers this to stop at pickups and drop-offs
+    if (this.maxSpeed === undefined) { this.maxSpeed = MAX_SPEED; this.steerRate = STEER_RATE; }   // drive mode tunes these
     this.sensors = new Array(SENSOR_ANGLES.length).fill(SENSOR_RANGE);
     this.crashedAt = null;
   }
@@ -67,11 +68,11 @@ export class Car {
   step(dt) {
     if (!this.alive) return;
     this.time += dt;
-    const target = Math.min(this.speedCap, MIN_SPEED + this.throttle * (MAX_SPEED - MIN_SPEED));
+    const target = Math.min(this.speedCap, MIN_SPEED + this.throttle * (this.maxSpeed - MIN_SPEED));
     this.speed += (target - this.speed) * Math.min(1, 2.2 * dt);
     if (this.speedCap < 1) this.lastGain = this.time;   // waiting on purpose isn't being stuck
     // Turning gets gentler at very low speed, like a real car.
-    this.heading += this.steer * STEER_RATE * dt * Math.min(1, this.speed / 4);
+    this.heading += this.steer * this.steerRate * dt * Math.min(1, this.speed / 4);
     this.x += Math.cos(this.heading) * this.speed * dt;
     this.y += Math.sin(this.heading) * this.speed * dt;
 

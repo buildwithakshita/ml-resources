@@ -36,17 +36,12 @@
     <button data-mode="learn" class="on">Learn</button>
     <button data-mode="drive">Drive</button>
     <button data-mode="trip">Robotaxi</button>
-    <button data-mode="test">New road</button>
   </div>
   <div class="tools">
     <div class="seg glass learn-only">
-      <button data-speed="1" class="on">1×</button>
-      <button data-speed="3">3×</button>
-      <button data-speed="10">10×</button>
-    </div>
-    <div class="seg glass learn-only" title="Learn one road, or a brand-new road every generation">
-      <button data-train="one" class="on">1 road</button>
-      <button data-train="many">Many roads</button>
+      <button data-speed="3" class="on">Normal</button>
+      <button data-speed="8">Fast</button>
+      <button data-speed="20">Turbo</button>
     </div>
     <div class="seg glass learn-only">
       <button data-view="chase" class="on">Chase</button>
@@ -77,25 +72,6 @@
   <div class="tiny" id="tripCount"></div>
 </div>
 
-<div class="hud bottom-right glass test-only" id="testCard">
-  <div class="eyebrow" id="testTitle">Never seen this road before</div>
-  <div class="trip-where" id="testRoad">Road #1234</div>
-  <div class="trip-eta" id="testPct">0% of the lap</div>
-  <div class="bar"><i id="testBar"></i></div>
-  <div class="tiny" id="testNote"></div>
-  <div class="seg brain-pick">
-    <button data-brain="yours" class="on">Your brain</button>
-    <button data-brain="memorised">Memorised</button>
-    <button data-brain="many">Many roads</button>
-  </div>
-  <div class="test-actions">
-    <button class="pill primary" id="newRoadBtn">↻ New road</button>
-    <button class="pill" id="learnHereBtn">Learn this road</button>
-    <button class="pill" id="examBtn">Test 5 roads</button>
-  </div>
-  <div class="chips" id="chips"></div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <div class="sheet-wrap" id="about" hidden>
@@ -108,7 +84,7 @@
       <li><b>It crashes. A lot.</b> Generation 1 has random brains, so almost every car drives straight off the road.</li>
       <li><b>The best ones pass it on.</b> The cars that got furthest have their brains copied with tiny random changes. No one tells them the right answer. Like evolution, generation after generation, they figure out how to drive the whole block.</li>
     </ol>
-    <p class="fine"><b>New road</b> tests whether it learned to <i>drive</i> or just memorised one road: drop the brain on a road it has never seen. Train on <b>Many roads</b> to make it handle any road.</p>
+    <p class="fine">Every generation gets a <b>brand-new road</b>, so the cars can't just memorise one route. They have to actually learn to drive.</p>
     <p class="fine">Then try <b>Robotaxi</b> mode: the trained brain drives pickups and drop-offs on its own. Works offline once loaded, and remembers your progress on this device.</p>
     <div class="sheet-actions">
       <button class="pill primary" id="aboutClose">Start watching</button>

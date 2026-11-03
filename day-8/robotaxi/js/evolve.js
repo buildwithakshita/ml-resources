@@ -59,23 +59,49 @@ export class Population {
     this.time += dt;
     for (const c of this.cars) { if (c.alive) { c.sense(); c.think(); c.step(dt); } }
     // a car that finishes a full lap is done; remember how quickly it got there
-    for (const c of this.cars) if (c.alive && c.lapFraction() >= 1) { c.alive = false; c.finished = true; c.finishTime = c.time; }
-    if (this.alive === 0 || this.time > GEN_TIME) this.nextGeneration();
+    for (const c of this.cars) if (c.alive && c.lapFraction() >= 1) {
+      c.alive = false; c.finished = true; c.finishTime = c.time;
+      if (this.firstFinish == null) this.firstFinish = this.time;
+    }
+    if (this.exam) this.examStep(dt);
+    // end the generation when everyone has crashed, 2 s after the first car finishes, or at the time limit
+    if (this.alive === 0 || this.time > GEN_TIME || (this.firstFinish != null && this.time > this.firstFinish + 2)) this.nextGeneration();
+  }
+
+  // ---- The practice-road exam, spread out over the next generation so the app never freezes ----
+  startExam(candidates) {
+    if (!this.practiceRoads) this.practiceRoads = [-1, -2, -3].map(k => this.roadFor(k));
+    this.exam = {
+      candidates,
+      runs: candidates.map(b => this.practiceRoads.map(t => new Car(t, startIndexFor(t), b))),
+    };
+  }
+  examStep(dt) {
+    let busy = false;
+    for (const runs of this.exam.runs) for (const c of runs) {
+      if (c.alive && c.bestProgress < c.track.length && c.time < GEN_TIME) { c.sense(); c.think(); c.step(dt); busy = true; }
+    }
+    if (!busy) this.finishExam();
+  }
+  finishExam() {
+    const { candidates, runs } = this.exam;
+    let best = null, bestScore = -1;
+    candidates.forEach((b, i) => {
+      let total = 0;
+      for (const c of runs[i]) total += Math.min(1, c.lapFraction()) + (c.bestProgress >= c.track.length ? (GEN_TIME - c.time) / GEN_TIME * 0.2 : 0);
+      const sc = total / runs[i].length;
+      if (sc > bestScore) { best = b; bestScore = sc; }
+    });
+    this.stagnant = bestScore > (this.championScore || 0) + 0.01 ? 0 : (this.stagnant || 0) + 1;
+    this.champion = best; this.championScore = bestScore;
+    this.exam = null;
   }
 
   // Fitness: how far you got, plus a bonus for finishing the lap quickly.
   score(c) { return c.bestProgress + (c.finished ? (GEN_TIME - c.finishTime) * 20 : 0); }
 
-  // Average share of a lap a brain manages on the practice roads (1 = finished every one).
-  practice(brain) {
-    if (!this.practiceRoads) this.practiceRoads = [-1, -2, -3].map(k => this.roadFor(k));
-    let total = 0;
-    for (const t of this.practiceRoads) {
-      const c = new Car(t, startIndexFor(t), brain);
-      while (c.alive && c.bestProgress < t.length && c.time < GEN_TIME) { c.sense(); c.think(); c.step(1 / 60); }
-      total += Math.min(1, c.lapFraction()) + (c.bestProgress >= t.length ? (GEN_TIME - c.time) / GEN_TIME * 0.2 : 0);
-    }
-    return total / this.practiceRoads.length;
+  finishExamNow() {   // only if a generation ends before its exam does (rare)
+    while (this.exam) this.examStep(1 / 60);
   }
 
   nextGeneration() {
@@ -86,12 +112,11 @@ export class Population {
     if (top.finished && (!this.bestLapTime || top.finishTime < this.bestLapTime)) this.bestLapTime = top.finishTime;
     if (this.roadFor) {
       // Scores on different roads can't be compared directly, so the top 3 of this generation
-      // and the current champion each take a quick test on 3 practice roads. Best one wins.
-      const candidates = [...new Set([this.champion, ...ranked.slice(0, 3).map(c => c.brain)].filter(Boolean))];
-      let best = null, bestScore = -1;
-      for (const b of candidates) { const sc = this.practice(b); if (sc > bestScore) { best = b; bestScore = sc; } }
-      this.stagnant = bestScore > (this.championScore || 0) + 0.01 ? 0 : (this.stagnant || 0) + 1;
-      this.champion = best; this.championScore = bestScore;
+      // and the current champion take a test on 3 practice roads (run quietly during the next
+      // generation). The best one becomes the champion.
+      if (this.exam) this.finishExamNow();
+      if (!this.champion) this.champion = top.brain;
+      this.startExam([...new Set([this.champion, ...ranked.slice(0, 3).map(c => c.brain)])]);
     } else {
       if (!this.champion || this.score(top) > this.championScore * 1.02) this.stagnant = 0;
       else this.stagnant = (this.stagnant || 0) + 1;
@@ -102,6 +127,7 @@ export class Population {
     const parents = [this.champion, ...ranked.slice(0, 9).map(c => c.brain)];
     this.generation++;
     if (this.roadFor) { this.track = this.roadFor(this.generation); this.start = startIndexFor(this.track); }
+    this.firstFinish = null;
     this.spawn(this.childrenOf(parents));
   }
 }
