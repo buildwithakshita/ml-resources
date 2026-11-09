@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Day 9 · How does AI work? — Resources · @buildwithakshita</title>
+<meta name="description" content="Day 9 of 30 Days to MLE: how ChatGPT actually works. Tokens, hidden prompts, softmax, sampling and temperature, explained simply, with a one-evening plan and free resources: 3Blue1Brown, Tiktokenizer, Transformer Explainer and Karpathy.">
+<link rel="canonical" href="https://buildwithakshita.github.io/ml-resources/day-9/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://buildwithakshita.github.io/ml-resources/day-9/">
+<meta property="og:title" content="Day 9 · How does AI work? Episode 01">
+<meta property="og:description" content="Day 9 of 30 Days to MLE: how ChatGPT actually works. Tokens, hidden prompts, softmax, sampling and temperature, explained simply, with a one-evening plan and free resources: 3Blue1Brown, Tiktokenizer, Transformer Explainer and Karpathy.">
+<meta property="og:image" content="https://buildwithakshita.github.io/ml-resources/day-9/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#273518">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23273518'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-style='italic' font-weight='700' font-size='30' text-anchor='middle' fill='%23DDA05E'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,700&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: forest masthead with the series name, then three resource sheets on cream, each = links row + numbered syllabus. Day 3 adds a term-card grid for the cheat sheet. Single brand look (no theme switch). */
+:root {
+  --forest: #273518;
+  --olive: #5F6C37;
+  --cream: #FEFADF;
+  --paper: #F6F1D8;
+  --tan: #DDA05E;
+  --rust: #BC6C25;
+  --ink-soft: #4A5536;
+  --line: rgba(39, 53, 24, 0.16);
+  --display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --body: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--cream); color: var(--forest); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+a { color: inherit; }
+a:focus-visible { outline: 2px solid var(--rust); outline-offset: 3px; border-radius: 6px; }
+
+.mast { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 56px 64px; }
+.wrap { max-width: 860px; margin: 0 auto; }
+.handle { display: inline-flex; align-items: center; gap: 8px; background: var(--tan); color: var(--forest); font-weight: 700; font-size: 14px; letter-spacing: 0.02em; padding: 8px 16px; border-radius: 999px; text-decoration: none; }
+.handle:hover { background: var(--cream); }
+.mast h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 7vw, 4.2rem); line-height: 1.05; margin: 28px 0 0; text-wrap: balance; }
+.mast h1 em { color: var(--tan); font-weight: 700; }
+.mast p.lede { max-width: 58ch; margin: 22px 0 0; font-size: 1.05rem; color: var(--cream); opacity: 0.92; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 28px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tan); }
+
+main { padding-inline: 20px; padding-block: 24px 40px; }
+.res { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 36px; padding-block: 48px; border-bottom: 1px solid var(--line); }
+.res:last-of-type { border-bottom: 0; }
+.num { font-family: var(--display); font-style: italic; font-weight: 700; font-size: 4.5rem; line-height: 0.9; color: var(--tan); }
+.kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); }
+.res h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 4.5vw, 2.5rem); line-height: 1.1; margin: 6px 0 4px; text-wrap: balance; }
+.res h2 em { color: var(--rust); font-weight: 700; }
+.who { font-size: 14px; font-weight: 600; color: var(--ink-soft); margin: 0; }
+.why { margin: 16px 0 0; max-width: 60ch; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.facts li { font-size: 13px; font-weight: 600; background: var(--paper); border: 1px solid var(--line); padding: 4px 12px; border-radius: 999px; }
+
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 0; }
+.btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--forest); color: var(--forest); background: transparent; }
+.btn:hover { background: var(--forest); color: var(--cream); }
+.btn.primary { background: var(--forest); color: var(--cream); }
+.btn.primary:hover { background: var(--rust); border-color: var(--rust); }
+.btn span { font-size: 12px; opacity: 0.8; }
+
+.syllabus { margin: 32px 0 0; padding: 0; list-style: none; counter-reset: t; border-top: 1px solid var(--line); }
+.syllabus li { counter-increment: t; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 12px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.syllabus li::before { content: counter(t, decimal-leading-zero); font-weight: 700; font-size: 14px; color: var(--rust); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.syllabus strong { display: block; font-weight: 600; font-size: 1rem; }
+.syllabus small { display: block; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+footer { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 40px; }
+footer .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+footer p { margin: 0; font-family: var(--display); font-size: 1.35rem; }
+footer p em { color: var(--tan); }
+
+@media (max-width: 640px) {
+  .res { grid-template-columns: minmax(0, 1fr); padding-block: 36px; }
+  .num { font-size: 3.2rem; }
+  .mast { padding-block: 40px 48px; }
+}
+.key { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 22px 0 0; padding: 14px 18px; background: var(--paper); border: 1px dashed var(--olive); border-radius: 12px; font-size: 13.5px; }
+.key b { font-weight: 700; color: var(--olive); margin-right: 2px; letter-spacing: .06em; text-transform: uppercase; font-size: 11.5px; }
+.m { font-family: var(--display); font-style: italic; font-size: 1.05em; }
+.terms { margin: 24px 0 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+.terms > li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 0; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--paper); break-inside: avoid; }
+.t-text { padding: 18px 20px; }
+.t-text h3 { margin: 0; font-family: var(--display); font-weight: 700; font-style: italic; font-size: 1.4rem; color: var(--rust); line-height: 1.15; }
+.t-text h3 small { font-family: var(--body); font-style: normal; font-weight: 600; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--olive); margin-left: 6px; }
+.t-text p { margin: 8px 0 0; font-size: 14px; line-height: 1.55; }
+.t-text .dev { display: inline-block; margin-top: 12px; font-size: 12.5px; font-weight: 600; background: var(--tan); color: var(--forest); padding: 4px 11px; border-radius: 999px; }
+.t-text .watch { margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+.t-text .watch b { color: var(--rust); }
+.t-math { background: var(--forest); color: var(--cream); padding: 18px 20px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.eq { font-family: var(--display); font-size: 1.22rem; line-height: 1.5; }
+.eq i { font-style: italic; }
+.eq .hl { color: var(--tan); }
+.eq sub, .eq sup { font-size: .68em; }
+.lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--tan); margin-bottom: -4px; }
+.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.55; background: rgba(254,250,223,.08); border: 1px solid rgba(254,250,223,.18); border-radius: 8px; padding: 8px 10px; white-space: pre; overflow-x: auto; color: var(--cream); }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .82em; line-height: 1.15; margin: 0 2px; }
+.frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 3px; }
+.scratch { margin: 26px 0 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); break-inside: avoid; }
+.scratch header { background: var(--rust); color: var(--cream); padding: 12px 20px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.scratch header span { font-weight: 500; opacity: .9; }
+.scratch .code { background: var(--forest); border: 0; border-radius: 0; padding: 18px 20px; font-size: 13px; }
+.scratch .code .c { color: var(--tan); }
+@media (max-width: 680px) { .terms > li { grid-template-columns: minmax(0, 1fr); } }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 24px 0 0; }
+.stats div { background: var(--forest); color: var(--cream); border-radius: 14px; padding: 16px; }
+.stats b { display: block; font-family: var(--display); font-size: 2rem; color: var(--tan); line-height: 1.1; }
+.stats span { font-size: 13px; }
+.cm { margin: 24px 0 0; display: grid; grid-template-columns: 110px 1fr 1fr; gap: 6px; max-width: 520px; font-size: 14px; }
+.cm div { padding: 14px; border-radius: 10px; text-align: center; font-weight: 600; }
+.cm .h { background: transparent; color: var(--olive); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; padding: 8px; }
+.cm .tp { background: var(--rust); color: var(--cream); } .cm .tn { background: var(--olive); color: var(--cream); }
+.cm .fp, .cm .fn { background: var(--paper); border: 1.5px dashed var(--rust); color: var(--forest); }
+.cm small { display: block; font-weight: 500; font-size: 12px; opacity: .85; }
+.buckets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 24px 0 0; }
+.buckets div { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.buckets b { display: block; font-family: var(--display); font-style: italic; font-size: 1.35rem; color: var(--rust); }
+.buckets span { font-size: 14px; } .buckets code { font-size: 12.5px; }
+pre.snip { margin: 24px 0 0; background: var(--forest); color: var(--cream); border-radius: 14px; padding: 18px 20px; font-size: 13.5px; line-height: 1.6; overflow-x: auto; }
+pre.snip .c { color: var(--tan); }
+@media (max-width: 640px) { .stats, .buckets { grid-template-columns: minmax(0, 1fr); } .cm { grid-template-columns: 80px 1fr 1fr; } }
+figure.fig{margin:24px 0 0}figure.fig img{width:100%;max-width:560px;border-radius:16px;display:block}figure.fig figcaption{font-size:13px;color:var(--olive,#5F6C37);margin-top:8px}
+.pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.handle.alt { background: transparent; color: var(--cream); box-shadow: inset 0 0 0 1.5px var(--tan); }
+.handle.alt:hover { background: var(--tan); color: var(--forest); }
+footer .gh { margin-top: 20px; font-size: 13px; opacity: 0.75; }
+footer .gh a { color: var(--cream); }
+.back { display: inline-block; margin-top: 18px; font-size: 13px; font-weight: 600; color: var(--tan); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap">
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+    <h1>Day 9 · How does <em>AI</em><br>actually work?</h1>
+    <p class="lede">Everything behind episode 01 of "how does AI work?": how ChatGPT turns your message into tokens, scores every possible next token, and rolls weighted dice to pick one, one token at a time. Six ideas, one evening, all free.</p>
+    <div class="legend"><span>6 ideas</span><span>1 evening</span><span>All free</span></div>
+    <a class="back" href="https://buildwithakshita.github.io/ml-resources/">← All 30 Days to MLE resources</a>
+  </div>
+</header>
+<main><div class="wrap">
+    <section class="res" id="plan">
+      <div class="num">01</div>
+      <div>
+        <div class="kicker">The plan · one evening</div>
+        <h2>Watch, <em>poke</em>, go deeper</h2>
+        <p class="who">Four steps, in this order</p>
+        <p class="why">Start with the 8-minute big picture, then see real tokens with your own eyes, then drag the temperature slider and watch the odds change. Finish with Karpathy if you want the full story.</p>
+        <ul class="facts"><li>~2.5 hours</li><li>No install</li><li>Free</li></ul>
+        <div class="links"><a class="btn primary" href="https://www.3blue1brown.com/lessons/mini-llm" target="_blank" rel="noopener">LLMs explained briefly <span>3Blue1Brown</span></a><a class="btn primary" href="https://tiktokenizer.vercel.app/" target="_blank" rel="noopener">Tiktokenizer <span>see real tokens</span></a><a class="btn primary" href="https://poloclub.github.io/transformer-explainer/" target="_blank" rel="noopener">Transformer Explainer <span>play with temperature</span></a><a class="btn" href="https://www.youtube.com/watch?v=7xTGNNLPyMI" target="_blank" rel="noopener">Deep Dive into LLMs <span>Andrej Karpathy</span></a></div>
+        <ol class="syllabus"><li><div><strong>10 min · 3Blue1Brown, "Large Language Models explained briefly"</strong><small>The whole idea in 8 minutes: predict the next word, over and over</small></div></li><li><div><strong>15 min · Tiktokenizer</strong><small>Type "where's the Eiffel Tower?" and see how it really gets chopped up, with the token numbers. Try a long word and an emoji too</small></div></li><li><div><strong>30 min · Transformer Explainer</strong><small>Type a sentence, look at the next-token probabilities, then drag temperature from low to high and watch the bars flatten</small></div></li><li><div><strong>90 min · Karpathy's "Deep Dive into LLMs like ChatGPT"</strong><small>Watch until the inference part (how the model generates text), then stop. That's all Day 9 needs</small></div></li></ol>
+      </div>
+    </section>
+    <section class="res" id="ideas">
+      <div class="num">02</div>
+      <div>
+        <div class="kicker">The cheat sheet</div>
+        <h2>Six ideas, <em>that's all</em></h2>
+        <p class="who">What it is, the dev version, and the trap</p>
+        <p class="why">Every chatbot you've used, from ChatGPT to Claude, runs on this loop.</p>
+        <ul class="terms">
+<li><div class="t-text"><h3>LLM<small>large language model</small></h3><p>A huge neural network trained on a lot of text to do one job: given some text, predict the next token.</p><span class="dev">Dev: A function that takes a string and returns odds for what comes next</span><p class="watch"><b>Watch out:</b> It doesn't look things up by default. It predicts what's likely.</p></div><div class="t-math"><div class="lbl">The job</div><div class="eq">text → <span class="hl">next token</span></div></div></li>
+<li><div class="t-text"><h3>Token<small>a word or a piece of one</small></h3><p>Text gets chopped into chunks from a fixed vocabulary, and every chunk becomes a number. Common words are one token; rare words get split into pieces.</p><span class="dev">Dev: Like an enum: every chunk of text has an ID</span><p class="watch"><b>Watch out:</b> Models count, price and limit everything in tokens, not words.</p></div><div class="t-math"><div class="lbl">Example (made-up IDs)</div><div class="code">"where's the Eiffel Tower?"
+→ [where][’s][ the][ Eiff][el][ Tower][?]
+→ [1734, 596, 279, 88430, 301, 22703, 30]</div></div></li>
+<li><div class="t-text"><h3>Chat template<small>the hidden text</small></h3><p>Your message is wrapped in hidden text before the model sees it: a system prompt, "User:", your message, then "Assistant:". The answer is just the most likely text after "Assistant:".</p><span class="dev">Dev: A request wrapped in headers you never see</span><p class="watch"><b>Watch out:</b> "Memory" is just extra text added into this prompt behind the scenes.</p></div><div class="t-math"><div class="lbl">What the model sees</div><div class="code">[system] You are a helpful assistant.
+User: where's the Eiffel Tower?
+Assistant: ▍</div></div></li>
+<li><div class="t-text"><h3>Logits &amp; softmax<small>scores → odds</small></h3><p>The model gives every token in its vocabulary a raw score (a logit). Softmax turns those scores into probabilities that add up to 100%.</p><span class="dev">Dev: Normalising a list of scores into percentages</span><p class="watch"><b>Watch out:</b> Even "pizza" gets a tiny chance. Nothing is ever exactly 0%.</p></div><div class="t-math"><div class="lbl">Softmax</div><div class="eq"><i>p</i><sub><i>i</i></sub> = <span class="frac"><span><i>e</i><sup><i>z</i><sub><i>i</i></sub></sup></span><span>Σ<sub><i>j</i></sub> <i>e</i><sup><i>z</i><sub><i>j</i></sub></sup></span></span></div><div class="code">p = exp(z) / exp(z).sum()</div></div></li>
+<li><div class="t-text"><h3>Sampling &amp; temperature<small>rolling weighted dice</small></h3><p>The model picks the next token at random, weighted by those odds. Temperature controls how random: low = almost always the top token, high = more surprising picks.</p><span class="dev">Dev: random.choices(tokens, weights=probs)</span><p class="watch"><b>Watch out:</b> This is why the same question can give you different answers.</p></div><div class="t-math"><div class="lbl">With temperature T</div><div class="eq"><i>p</i><sub><i>i</i></sub> = <span class="frac"><span><i>e</i><sup><i>z</i><sub><i>i</i></sub>/<span class="hl">T</span></sup></span><span>Σ<sub><i>j</i></sub> <i>e</i><sup><i>z</i><sub><i>j</i></sub>/<span class="hl">T</span></sup></span></span></div><div class="code">p = exp(z / T) / exp(z / T).sum()</div></div></li>
+<li><div class="t-text"><h3>The loop<small>one token at a time</small></h3><p>Pick a token, stick it on the end, and run the whole model again. Repeat until it picks a "stop" token. Every answer you've ever seen was built this way.</p><span class="dev">Dev: A while loop that appends to a string</span><p class="watch"><b>Watch out:</b> The prompt shifts every step's odds. Add "I'm in Vegas" and "the Strip" beats "Paris".</p></div><div class="t-math"><div class="lbl">Generation</div><div class="code">while token != STOP:
+    probs = model(text)
+    token = sample(probs)
+    text += token</div></div></li>
+        </ul>
+        <div class="key"><b>Bonus</b> <span><span class="m">Why not always pick the top token?</span> You can (that's temperature near 0). But answers get repetitive and flat, so a little randomness makes them sound more natural.</span></div>
+      </div>
+    </section>
+    <section class="res" id="try">
+      <div class="num">03</div>
+      <div>
+        <div class="kicker">Try it in 10 lines</div>
+        <h2>Roll the <em>dice</em> yourself</h2>
+        <p class="who">The Eiffel Tower example from the reel, in Python</p>
+        <p class="why">Made-up scores for three tokens. Run it a few times, then change <code>T</code> to 0.2 and 2.0 and see what happens.</p>
+<pre class="snip"><span class="c"># the first word of the answer to "where's the Eiffel Tower?"</span>
+import numpy as np
+tokens = ["The", "It's", "Paris"]
+logits = np.array([8.1, 7.4, 5.2])   <span class="c"># example scores</span>
+
+def sample(logits, T=1.0):
+    p = np.exp(logits / T)
+    p = p / p.sum()                  <span class="c"># softmax → adds up to 1</span>
+    return np.random.choice(tokens, p=p), p.round(3)
+
+print(sample(logits, T=1.0))   <span class="c"># usually "The", sometimes "It's"</span>
+print(sample(logits, T=0.2))   <span class="c"># almost always "The"</span>
+print(sample(logits, T=2.0))   <span class="c"># much more random</span></pre>
+      </div>
+    </section>
+    <section class="res" id="check">
+      <div class="num">04</div>
+      <div>
+        <div class="kicker">Self-check</div>
+        <h2>Say these <em>out loud</em></h2>
+        <p class="who">If you can answer all five, you've got it</p>
+        <ol class="syllabus"><li><div><strong>What is a token, and why doesn't the model just use words?</strong></div></li><li><div><strong>What does the model actually see when you send it a message?</strong></div></li><li><div><strong>What does softmax do to the scores?</strong></div></li><li><div><strong>Why can the same question give two different answers?</strong></div></li><li><div><strong>How does "I'm in Vegas" change the answer, step by step?</strong></div></li></ol>
+      </div>
+    </section>
+    <section class="res" id="learn">
+      <div class="num">05</div>
+      <div>
+        <div class="kicker">Learn it yourself</div>
+        <h2>Go <em>deeper</em></h2>
+        <p class="who">When you want more than one evening</p>
+        <p class="why">Karpathy's shorter talk is the best big-picture tour. 3Blue1Brown's transformer chapter shows what happens inside the model, and sets up episode 02 (attention). OpenAI's tokenizer is another way to see real tokens.</p>
+        <ul class="facts"><li>Free</li><li>Self-paced</li></ul>
+        <div class="links"><a class="btn primary" href="https://www.youtube.com/watch?v=zjkBMFhNj_g" target="_blank" rel="noopener">Intro to Large Language Models <span>Andrej Karpathy</span></a><a class="btn" href="https://www.3blue1brown.com/lessons/gpt" target="_blank" rel="noopener">Transformers, the tech behind LLMs <span>3Blue1Brown</span></a><a class="btn" href="https://platform.openai.com/tokenizer" target="_blank" rel="noopener">Tokenizer <span>OpenAI</span></a></div>
+      </div>
+    </section>
+</div></main>
+<footer>
+  <div class="wrap">
+    <p>Follow the 30 days on <em>Instagram</em> &amp; <em>GitHub</em></p>
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+  </div>
+  <div class="wrap gh">Code &amp; projects at <a href="https://github.com/buildwithakshita" target="_blank" rel="noopener">github.com/buildwithakshita</a> · <a href="https://github.com/buildwithakshita/ml-resources" target="_blank" rel="noopener">View this page's source</a></div>
+</footer>
+
+</body>
+</html>
