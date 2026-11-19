@@ -1,0 +1,6 @@
+# Needs Python 3.9-3.12 (MediaPipe has no build for newer Pythons yet).
+# mediapipe is pinned: newer releases dropped the mp.solutions API used here.
+mediapipe==0.10.14
+opencv-python
+numpy
+pillow
