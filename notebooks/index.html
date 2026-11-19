@@ -147,6 +147,10 @@ footer .gh a { color: var(--cream); }
 .vs .r b { color: var(--tan); }
 @media (max-width: 640px) { .vs { grid-template-columns: minmax(0,1fr); } }
 .t-text .ex { margin-top: 10px; padding: 10px 12px; background: var(--cream); border-left: 3px solid var(--tan); border-radius: 0 8px 8px 0; font-size: 13.5px; }
+.jump { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; overflow-x: auto; padding: 14px 0; margin: 0 0 -24px; background: var(--cream); border-bottom: 1px solid var(--line); scrollbar-width: none; }
+.jump a { flex: none; font-size: 13px; font-weight: 600; text-decoration: none; padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--forest); }
+.jump a:hover { background: var(--forest); color: var(--cream); }
+[id] { scroll-margin-top: 70px; }
 .t-text .ex b { color: var(--olive); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; display: block; margin-bottom: 2px; }
 </style>
 </head>
