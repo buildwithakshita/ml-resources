@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Day 11 · How AI turns a sentence into a picture — Resources · @buildwithakshita</title>
+<meta name="description" content="Day 11 of 30 Days to MLE: how diffusion models work, the Polaroid version. Training adds noise to real photos, the model learns to guess and remove it, and making a new picture starts from pure static with your sentence steering every step. Plus the tool from the reel, Leonardo.ai, and a one-evening plan.">
+<link rel="canonical" href="https://buildwithakshita.github.io/ml-resources/day-11/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://buildwithakshita.github.io/ml-resources/day-11/">
+<meta property="og:title" content="Day 11 · How AI turns a sentence into a picture">
+<meta property="og:description" content="Diffusion models, the Polaroid version: start from static, remove a little noise at a time, and let your sentence steer every step. Plus the tool from the reel and a one-evening plan.">
+<meta property="og:image" content="https://buildwithakshita.github.io/ml-resources/day-11/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#273518">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23273518'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-style='italic' font-weight='700' font-size='30' text-anchor='middle' fill='%23DDA05E'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,700&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: forest masthead, then numbered resource sheets on cream (same pieces as day-10). Day 11 adds a noise-to-picture strip and a tool card. Single brand look (no theme switch). */
+:root {
+  --forest: #273518;
+  --olive: #5F6C37;
+  --cream: #FEFADF;
+  --paper: #F6F1D8;
+  --sage: #E4E7CF;
+  --tan: #DDA05E;
+  --rust: #BC6C25;
+  --ink-soft: #4A5536;
+  --line: rgba(39, 53, 24, 0.16);
+  --display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --body: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--cream); color: var(--forest); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+a { color: inherit; }
+a:focus-visible { outline: 2px solid var(--rust); outline-offset: 3px; border-radius: 6px; }
+code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; background: var(--sage); padding: 1px 5px; border-radius: 5px; }
+
+.mast { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 56px 64px; }
+.wrap { max-width: 860px; margin: 0 auto; }
+.handle { display: inline-flex; align-items: center; gap: 8px; background: var(--tan); color: var(--forest); font-weight: 700; font-size: 14px; letter-spacing: 0.02em; padding: 8px 16px; border-radius: 999px; text-decoration: none; }
+.handle:hover { background: var(--cream); }
+.pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.handle.alt { background: transparent; color: var(--cream); box-shadow: inset 0 0 0 1.5px var(--tan); }
+.handle.alt:hover { background: var(--tan); color: var(--forest); }
+.mast h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 7vw, 4.2rem); line-height: 1.05; margin: 28px 0 0; text-wrap: balance; }
+.mast h1 em { color: var(--tan); font-weight: 700; }
+.mast p.lede { max-width: 58ch; margin: 22px 0 0; font-size: 1.05rem; color: var(--cream); opacity: 0.92; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 28px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tan); }
+.back { display: inline-block; margin-top: 18px; font-size: 13px; font-weight: 600; color: var(--tan); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+
+main { padding-inline: 20px; padding-block: 24px 40px; }
+.res { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 36px; padding-block: 48px; border-bottom: 1px solid var(--line); }
+.res:last-of-type { border-bottom: 0; }
+.num { font-family: var(--display); font-style: italic; font-weight: 700; font-size: 4.5rem; line-height: 0.9; color: var(--tan); }
+.kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); }
+.res h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 4.5vw, 2.5rem); line-height: 1.1; margin: 6px 0 4px; text-wrap: balance; }
+.res h2 em { color: var(--rust); font-weight: 700; }
+.who { font-size: 14px; font-weight: 600; color: var(--ink-soft); margin: 0; }
+.why { margin: 16px 0 0; max-width: 60ch; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.facts li { font-size: 13px; font-weight: 600; background: var(--paper); border: 1px solid var(--line); padding: 4px 12px; border-radius: 999px; }
+
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 0; }
+.btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--forest); color: var(--forest); background: transparent; }
+.btn:hover { background: var(--forest); color: var(--cream); }
+.btn.primary { background: var(--forest); color: var(--cream); }
+.btn.primary:hover { background: var(--rust); border-color: var(--rust); }
+.btn span { font-size: 12px; opacity: 0.8; }
+
+.syllabus { margin: 32px 0 0; padding: 0; list-style: none; counter-reset: t; border-top: 1px solid var(--line); }
+.syllabus li { counter-increment: t; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 12px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.syllabus li::before { content: counter(t, decimal-leading-zero); font-weight: 700; font-size: 14px; color: var(--rust); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.syllabus strong { display: block; font-weight: 600; font-size: 1rem; }
+.syllabus small { display: block; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+/* noise -> picture strip */
+.strip { margin: 28px 0 0; background: var(--forest); border-radius: 16px; padding: 18px 18px 14px; box-shadow: 8px 8px 0 var(--tan); }
+.strip ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.strip li { display: flex; flex-direction: column; gap: 6px; }
+.strip svg { width: 100%; height: auto; display: block; border-radius: 10px; }
+.strip span { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--tan); text-align: center; }
+.strip p { margin: 12px 0 0; font-size: 13px; color: var(--cream); opacity: .85; text-align: center; }
+
+/* term cards (from day-10, plus the house hard shadow) */
+.terms { margin: 28px 0 0; padding: 0; list-style: none; display: grid; gap: 18px; }
+.terms > li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border: 1.5px solid var(--forest); border-radius: 16px; overflow: hidden; background: var(--paper); box-shadow: 6px 6px 0 var(--forest); }
+.t-text { padding: 18px 20px; }
+.t-text h3 { margin: 0; font-family: var(--display); font-weight: 700; font-style: italic; font-size: 1.4rem; color: var(--rust); line-height: 1.15; }
+.t-text h3 small { font-family: var(--body); font-style: normal; font-weight: 600; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--olive); margin-left: 6px; }
+.t-text p { margin: 8px 0 0; font-size: 14px; line-height: 1.55; }
+.t-text .dev { display: inline-block; margin-top: 12px; font-size: 12.5px; font-weight: 600; background: var(--tan); color: var(--forest); padding: 4px 11px; border-radius: 999px; }
+.t-text .watch { margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+.t-text .watch b { color: var(--rust); }
+.t-math { background: var(--forest); color: var(--cream); padding: 18px 20px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--tan); margin-bottom: -4px; }
+.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.55; background: rgba(254,250,223,.08); border: 1px solid rgba(254,250,223,.18); border-radius: 8px; padding: 8px 10px; white-space: pre; overflow-x: auto; color: var(--cream); }
+.code .c { color: var(--tan); }
+@media (max-width: 680px) { .terms > li { grid-template-columns: minmax(0, 1fr); } }
+
+.key { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 26px 0 0; padding: 14px 18px; background: var(--paper); border: 1px dashed var(--olive); border-radius: 12px; font-size: 13.5px; }
+.key b { font-weight: 700; color: var(--olive); margin-right: 2px; letter-spacing: .06em; text-transform: uppercase; font-size: 11.5px; }
+.m { font-family: var(--display); font-style: italic; font-size: 1.05em; }
+
+/* tool card */
+.tool { margin: 26px 0 0; border: 1.5px solid var(--forest); border-radius: 16px; background: var(--paper); box-shadow: 6px 6px 0 var(--forest); overflow: hidden; }
+.tool .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tool .row div { padding: 16px 18px; border-right: 1px solid var(--line); }
+.tool .row div:last-child { border-right: 0; }
+.tool b { display: block; font-family: var(--display); font-size: 1.7rem; line-height: 1.1; color: var(--forest); }
+.tool b.hl { color: var(--rust); }
+.tool .row span { font-size: 13px; color: var(--ink-soft); }
+.tool .note { margin: 0; padding: 12px 18px; background: var(--forest); color: var(--cream); font-size: 13px; }
+.tool .note strong { color: var(--tan); }
+
+.buckets { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 24px 0 0; }
+.buckets li { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.buckets b { display: block; font-family: var(--display); font-style: italic; font-size: 1.3rem; color: var(--rust); line-height: 1.2; margin-bottom: 6px; }
+.buckets span { font-size: 14px; }
+pre.snip { margin: 24px 0 0; background: var(--forest); color: var(--cream); border-radius: 14px; padding: 18px 20px; font-size: 13.5px; line-height: 1.6; overflow-x: auto; }
+pre.snip .c { color: var(--tan); }
+
+footer { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 40px; }
+footer .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+footer p { margin: 0; font-family: var(--display); font-size: 1.35rem; }
+footer p em { color: var(--tan); }
+footer .gh { margin-top: 20px; font-size: 13px; opacity: 0.75; }
+footer .gh a { color: var(--cream); }
+
+@media (max-width: 640px) {
+  .res { grid-template-columns: minmax(0, 1fr); padding-block: 36px; }
+  .num { font-size: 3.2rem; }
+  .mast { padding-block: 40px 48px; }
+  .buckets, .tool .row { grid-template-columns: minmax(0, 1fr); }
+  .tool .row div { border-right: 0; border-bottom: 1px solid var(--line); }
+  .strip ol { gap: 6px; }
+  .strip span { font-size: 9.5px; letter-spacing: .04em; }
+}
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap">
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+    <h1>Day 11 · AI doesn't paint.<br><em>It develops.</em></h1>
+    <p class="lede">Everything behind Day 11 of 30 Days to MLE: how a diffusion model turns your sentence into a picture, the Polaroid version. It starts from pure static and cleans it up a little at a time, and your words steer every single step. Plus the tool I used in the reel.</p>
+    <div class="legend"><span>6 ideas</span><span>1 evening</span><span>No code needed</span></div>
+    <a class="back" href="https://buildwithakshita.github.io/ml-resources/">← All 30 Days to MLE resources</a>
+  </div>
+</header>
+<main><div class="wrap">
+
+    <section class="res" id="plan">
+      <div class="num">01</div>
+      <div>
+        <div class="kicker">The plan · one evening</div>
+        <h2>Watch it, make one, <em>then explain it</em></h2>
+        <p class="who">Four steps, about 90 minutes</p>
+        <p class="why">You don't need to install anything tonight. Watch the steps happen in your browser first, then make your own picture, then check you could explain it to a friend.</p>
+        <ul class="facts"><li>~90 min</li><li>Just a browser</li><li>No GPU</li></ul>
+        <div class="links"><a class="btn primary" href="https://poloclub.github.io/diffusion-explainer/" target="_blank" rel="noopener">Diffusion Explainer <span>Georgia Tech · in your browser</span></a><a class="btn primary" href="https://leonardo.ai/" target="_blank" rel="noopener">Leonardo.ai <span>the tool from the reel</span></a></div>
+        <ol class="syllabus">
+          <li><div><strong>10 min · Read the breakdown below</strong><small>Six ideas, in plain English. Each one is a single step in the reel</small></div></li>
+          <li><div><strong>20 min · Watch the static clear, step by step</strong><small>Open Diffusion Explainer and drag the timestep slider. You're watching one real picture come out of noise over 50 steps. Then change the guidance scale and watch the picture follow your prompt more, or less</small></div></li>
+          <li><div><strong>20 min · Make your own picture</strong><small>Sign up on Leonardo.ai and type a sentence. Then change one word and run it again, so you can see how much a single word steers the result</small></div></li>
+          <li><div><strong>40 min · Go one layer deeper</strong><small>Watch the Welch Labs video on 3Blue1Brown (link at the bottom), then answer the five self-check questions out loud</small></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="res" id="ideas">
+      <div class="num">02</div>
+      <div>
+        <div class="kicker">The breakdown · the Polaroid version</div>
+        <h2>Six ideas, <em>that's all</em></h2>
+        <p class="who">What it is, the dev version, and the trap</p>
+        <p class="why">A Polaroid starts as a murky square and the picture slowly appears. A diffusion model does something that looks the same, but underneath, a trained model is removing noise one small guess at a time.</p>
+
+        <figure class="strip" aria-label="Five frames: pure static, then less and less noise, until a clear picture of a sun over hills">
+          <ol>
+            <li><svg viewBox="0 0 100 100" aria-hidden="true"><defs><filter id="n1" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0" intercept="1"/></feComponentTransfer></filter></defs><rect width="100" height="100" fill="#FEFADF"/><rect width="100" height="100" filter="url(#n1)"/></svg><span>Static</span></li>
+            <li><svg viewBox="0 0 100 100" aria-hidden="true"><defs><filter id="n2" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0" intercept="0.82"/></feComponentTransfer></filter></defs><rect width="100" height="100" fill="#FEFADF"/><circle cx="66" cy="38" r="15" fill="#DDA05E"/><path d="M0 72 Q25 52 50 66 T100 60 V100 H0Z" fill="#5F6C37"/><rect width="100" height="100" filter="url(#n2)"/></svg><span>Step 5</span></li>
+            <li><svg viewBox="0 0 100 100" aria-hidden="true"><defs><filter id="n3" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0" intercept="0.55"/></feComponentTransfer></filter></defs><rect width="100" height="100" fill="#FEFADF"/><circle cx="66" cy="38" r="15" fill="#DDA05E"/><path d="M0 72 Q25 52 50 66 T100 60 V100 H0Z" fill="#5F6C37"/><rect width="100" height="100" filter="url(#n3)"/></svg><span>Step 12</span></li>
+            <li><svg viewBox="0 0 100 100" aria-hidden="true"><defs><filter id="n4" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="9"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0" intercept="0.25"/></feComponentTransfer></filter></defs><rect width="100" height="100" fill="#FEFADF"/><circle cx="66" cy="38" r="15" fill="#DDA05E"/><path d="M0 72 Q25 52 50 66 T100 60 V100 H0Z" fill="#5F6C37"/><path d="M0 84 Q30 70 60 82 T100 78 V100 H0Z" fill="#273518"/><rect width="100" height="100" filter="url(#n4)"/></svg><span>Step 18</span></li>
+            <li><svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#FEFADF"/><circle cx="66" cy="38" r="15" fill="#DDA05E"/><path d="M0 72 Q25 52 50 66 T100 60 V100 H0Z" fill="#5F6C37"/><path d="M0 84 Q30 70 60 82 T100 78 V100 H0Z" fill="#273518"/></svg><span>Step 25</span></li>
+          </ol>
+          <p>"A sun over green hills" · each step removes a little of the noise the model thinks is there</p>
+        </figure>
+
+        <ul class="terms">
+
+<li><div class="t-text"><h3>Noise<small>TV static</small></h3><p>Random speckle added on top of a picture: every pixel nudged lighter or darker by a random amount. A little noise makes a photo grainy. A lot of it, and there's no photo left, just static.</p><span class="dev">Dev: Random numbers from a bell curve, added to every pixel</span><p class="watch"><b>Watch out:</b> The noise isn't hiding the picture somewhere. Pure static has no photo inside it. The picture gets <em>invented</em> as the noise comes out.</p></div><div class="t-math"><div class="lbl">Adding noise, in one line</div><div class="code">noise = random_normal(image.shape)
+noisy = image + amount * noise
+<span class="c"># amount = 0: clear photo</span>
+<span class="c"># amount large: only static</span></div></div></li>
+
+<li><div class="t-text"><h3>Training<small>ruin photos on purpose</small></h3><p>Take millions of real photos. To each one, add some noise: sometimes a little, sometimes so much it's pure static. Now you have endless practice questions, and you already know every answer, because you added the noise yourself.</p><span class="dev">Dev: Self-made labels. No human tags a single example</span><p class="watch"><b>Watch out:</b> The reel shows noise piling up "then more, then more". In real training each photo gets one random noise level at a time, picked from about 1,000 possible levels. Same idea, shuffled order.</p></div><div class="t-math"><div class="lbl">One training example</div><div class="code">photo = random_photo()
+level = random_int(1, 1000)
+noise = random_normal(photo.shape)
+noisy = add_noise(photo, noise, level)
+<span class="c"># question: noisy, level</span>
+<span class="c"># answer:   noise</span></div></div></li>
+
+<li><div class="t-text"><h3>The noise guesser<small>the actual model</small></h3><p>The model is shown a noisy photo and asked one thing: what noise was added? Every wrong guess nudges its settings a little. After millions of photos, it gets very good at spotting what's static and what's picture.</p><span class="dev">Dev: A neural network trained to predict noise; loss = how far off the guess was</span><p class="watch"><b>Watch out:</b> It doesn't output a picture. It outputs its guess of the <em>noise</em>. The picture is whatever is left when you take that guess away.</p></div><div class="t-math"><div class="lbl">How the guess is scored</div><div class="code">guess = model(noisy, level)
+loss  = mean((guess - noise) ** 2)
+<span class="c"># small loss: it found the static</span>
+<span class="c"># then: nudge the weights, repeat</span></div></div></li>
+
+<li><div class="t-text"><h3>Generation<small>start from pure static</small></h3><p>To make a brand-new picture there's no photo at all. You start with pure random static, ask the model what noise it sees, take away a little of it, and ask again. Each pass, the static gets a bit more picture-like.</p><span class="dev">Dev: A loop. Same model, called again on its own output</span><p class="watch"><b>Watch out:</b> It removes only a slice of the guessed noise each step, not all of it. One big jump gives a blurry mess; many small steps give detail.</p></div><div class="t-math"><div class="lbl">The whole generator</div><div class="code">x = random_normal(shape)    <span class="c"># static</span>
+for level in steps:          <span class="c"># high to low</span>
+    guess = model(x, level, prompt)
+    x = remove_some(x, guess, level)
+picture = x</div></div></li>
+
+<li><div class="t-text"><h3>The prompt<small>steers every step</small></h3><p>Your sentence is turned into numbers and handed to the model on every single step. So each guess is really "what noise is here, if this is meant to be <em>a sun over green hills</em>?" That pulls the static toward what you typed instead of any random picture.</p><span class="dev">Dev: The prompt is an extra input to every model call, not a one-off setting</span><p class="watch"><b>Watch out:</b> Stable Diffusion runs each step twice, once with your prompt and once without, and push further in the direction of the difference. How hard they push is the "guidance scale". Too high and pictures start to look overcooked.</p></div><div class="t-math"><div class="lbl">Guidance, roughly</div><div class="code">with_p    = model(x, level, prompt)
+without_p = model(x, level, "")
+guess = without_p + scale * (with_p - without_p)
+<span class="c"># scale around 7 is a common default</span></div></div></li>
+
+<li><div class="t-text"><h3>Steps<small>about 25</small></h3><p>How many clean-up passes you run. More steps means more detail but a slower picture. The classic Stable Diffusion code defaults to 50; faster step methods get high-quality pictures in about 20. That's why the reel says "about 25".</p><span class="dev">Dev: The loop count: <code>num_inference_steps</code></span><p class="watch"><b>Watch out:</b> It's a speed-versus-quality dial, not a fixed number. Tools like Leonardo.ai pick it for you and don't show it.</p></div><div class="t-math"><div class="lbl">Same model, different budgets</div><div class="code">steps = 50   <span class="c"># Stable Diffusion default</span>
+steps = 20   <span class="c"># fast method, still sharp</span>
+steps = 10   <span class="c"># "quite good" with that method</span>
+steps = 1    <span class="c"># a blurry guess</span></div></div></li>
+
+        </ul>
+        <div class="key"><b>In one line</b> <span><span class="m">It's not painting. It's un-noising, guided by what you typed.</span> The code boxes are simplified pseudocode, so you can see the shape of each idea. They won't run as written.</span></div>
+      </div>
+    </section>
+
+    <section class="res" id="tool">
+      <div class="num">03</div>
+      <div>
+        <div class="kicker">The tool I used</div>
+        <h2>Leonardo<em>.ai</em></h2>
+        <p class="who">The live demo in the reel</p>
+        <p class="why">Type a sentence, press generate, and you get a picture in seconds. It runs in the browser, so there's nothing to install. Under the hood it gives you a choice of image models, but you don't need to know any of that to start.</p>
+        <div class="tool">
+          <div class="row">
+            <div><b class="hl">$0</b><span>Free plan: 150 tokens a day (the credits each picture costs)</span></div>
+            <div><b>Auto</b><span>On the no-cost plan it picks the model for you</span></div>
+            <div><b>$12</b><span>a month for Essential, if you want 80+ models and private pictures</span></div>
+          </div>
+          <p class="note"><strong>Heads up:</strong> on the no-cost plan your creations are public, so don't type anything personal into a prompt. Prices checked on leonardo.ai/pricing on Nov 19, 2026, before tax.</p>
+        </div>
+        <ol class="syllabus">
+          <li><div><strong>Sign up and open image generation</strong><small>Any sentence works. Describe a scene: who or what, where, what light, what style</small></div></li>
+          <li><div><strong>Run the same prompt twice</strong><small>You get two different pictures, because each run starts from different random static</small></div></li>
+          <li><div><strong>Change one word and run it again</strong><small>"sunset" to "midnight", say. That one word changes every one of the steps</small></div></li>
+        </ol>
+        <div class="links"><a class="btn primary" href="https://leonardo.ai/" target="_blank" rel="noopener">Open Leonardo.ai <span>sign up in the browser</span></a><a class="btn" href="https://leonardo.ai/pricing" target="_blank" rel="noopener">Plans &amp; prices <span>leonardo.ai</span></a></div>
+      </div>
+    </section>
+
+    <section class="res" id="try">
+      <div class="num">04</div>
+      <div>
+        <div class="kicker">Try it in code · optional</div>
+        <h2>Pick your own <em>step count</em></h2>
+        <p class="who">For when you want the dials Leonardo hides</p>
+        <p class="why">Hugging Face's <code>diffusers</code> library runs Stable Diffusion in a few lines. This is adapted from their docs. It downloads the model the first time (a big file) and wants a GPU (an Apple-silicon Mac works with <code>"mps"</code>). Change the two numbers and compare.</p>
+<pre class="snip"><span class="c"># pip install diffusers transformers accelerate torch</span>
+from diffusers import AutoPipelineForText2Image
+import torch
+
+pipe = AutoPipelineForText2Image.from_pretrained(
+    "stable-diffusion-v1-5/stable-diffusion-v1-5",
+    torch_dtype=torch.float16,
+).to("cuda")   <span class="c"># or "mps" on a Mac</span>
+
+image = pipe(
+    "a sun over green hills, polaroid photo",
+    num_inference_steps=25,   <span class="c"># the loop count</span>
+    guidance_scale=7.5,       <span class="c"># how hard the prompt steers</span>
+).images[0]
+image.save("day11.png")</pre>
+        <div class="links"><a class="btn" href="https://huggingface.co/docs/diffusers/using-diffusers/conditional_image_generation" target="_blank" rel="noopener">Text-to-image guide <span>Hugging Face · docs</span></a></div>
+      </div>
+    </section>
+
+    <section class="res" id="left-out">
+      <div class="num">05</div>
+      <div>
+        <div class="kicker">What 40 seconds left out</div>
+        <h2>The honest <em>footnotes</em></h2>
+        <p class="who">True, just too much for a reel</p>
+        <ul class="buckets">
+          <li><b>It works on a tiny version</b><span>Stable Diffusion doesn't clean up the full-size picture. It works on a small compressed summary of it, then a decoder blows that up into the final image. Much cheaper, almost no loss.</span></li>
+          <li><b>Noise levels get shuffled</b><span>Training doesn't walk one photo from clear to static. Each example gets a random noise level, so the model practises every stage of the clean-up.</span></li>
+          <li><b>Two pictures, same prompt</b><span>Different starting static, different picture. Tools let you fix the starting static with a "seed" number when you want the same result twice.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="res" id="check">
+      <div class="num">06</div>
+      <div>
+        <div class="kicker">Self-check</div>
+        <h2>Say these <em>out loud</em></h2>
+        <p class="who">If you can answer all five, you've got it</p>
+        <ol class="syllabus">
+          <li><div><strong>Where do the training labels come from, if nobody tags anything?</strong></div></li>
+          <li><div><strong>The model's output each step is a guess of what?</strong></div></li>
+          <li><div><strong>Why remove only a little noise per step instead of all of it at once?</strong></div></li>
+          <li><div><strong>Where does your prompt come in: once at the start, or every step?</strong></div></li>
+          <li><div><strong>Same prompt, run twice, different picture. Why?</strong></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="res" id="learn">
+      <div class="num">07</div>
+      <div>
+        <div class="kicker">Learn it yourself</div>
+        <h2>Go <em>deeper</em></h2>
+        <p class="why">Start with the video: it's the clearest picture of why the noise trick works. Jay Alammar's illustrated guide is the best next read, with diagrams for every part, including the compressed-picture trick. The Hugging Face course is where you go to build one, and it expects Python and some PyTorch. Lilian Weng's post and the original paper are the maths, for later.</p>
+        <ul class="facts"><li>Self-paced</li><li>Video, reading, course</li></ul>
+        <div class="links"><a class="btn primary" href="https://www.youtube.com/watch?v=iv-5mZ_9CPY" target="_blank" rel="noopener">How AI images work <span>Welch Labs on 3Blue1Brown</span></a><a class="btn primary" href="https://jalammar.github.io/illustrated-stable-diffusion/" target="_blank" rel="noopener">The Illustrated Stable Diffusion <span>Jay Alammar</span></a><a class="btn" href="https://huggingface.co/learn/diffusion-course/unit0/1" target="_blank" rel="noopener">Diffusion course <span>Hugging Face · 4 units</span></a><a class="btn" href="https://lilianweng.github.io/posts/2021-07-11-diffusion-models/" target="_blank" rel="noopener">What are diffusion models? <span>Lilian Weng · maths</span></a><a class="btn" href="https://arxiv.org/abs/2006.11239" target="_blank" rel="noopener">The DDPM paper <span>arXiv · 2020</span></a></div>
+      </div>
+    </section>
+
+</div></main>
+<footer>
+  <div class="wrap">
+    <p>Follow the 30 days on <em>Instagram</em> &amp; <em>GitHub</em></p>
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+  </div>
+  <div class="wrap gh">Code &amp; projects at <a href="https://github.com/buildwithakshita" target="_blank" rel="noopener">github.com/buildwithakshita</a> · <a href="https://github.com/buildwithakshita/ml-resources" target="_blank" rel="noopener">View this page's source</a></div>
+</footer>
+
+</body>
+</html>
