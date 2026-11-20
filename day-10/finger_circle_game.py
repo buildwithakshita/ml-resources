@@ -1,5 +1,5 @@
 """
-perfect_circle.py - the perfect circle challenge, drawn in mid-air.
+finger_circle_game.py - the perfect circle challenge, drawn in mid-air.
 
 Track your index fingertip with MediaPipe Hands, draw a circle in the air,
 and get scored out of 100 on how round it was. It then overlays the perfect
@@ -9,7 +9,7 @@ Your best score of the session stays on screen.
 There is no model here: the score is the average distance of your stroke from
 a best-fit circle, as a percentage of that circle's radius.
 
-Run:   python perfect_circle.py
+Run:   python finger_circle_game.py
 Keys:  q = quit   c = clear   r = reset best   p = framing (wide / fit / crop)
 
   POINT (index out, other fingers curled) -> draw
