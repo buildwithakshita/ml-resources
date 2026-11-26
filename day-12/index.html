@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Day 12 · The exact plan I'm following — Resources · @buildwithakshita</title>
+<meta name="description" content="Day 12 of 30 Days to MLE: the exact ML engineer study plan I'm following after restarting. 4 stages, 14 steps, 4 portfolio projects, about 10 hours a week, with every course, playlist and paper linked.">
+<link rel="canonical" href="https://buildwithakshita.github.io/ml-resources/day-12/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://buildwithakshita.github.io/ml-resources/day-12/">
+<meta property="og:title" content="Day 12 · The exact plan I'm following">
+<meta property="og:description" content="The exact study plan I'm following to switch from software engineer to ML engineer: 4 stages, 4 projects, every course and paper linked.">
+<meta property="og:image" content="https://buildwithakshita.github.io/ml-resources/day-12/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#273518">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23273518'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-style='italic' font-weight='700' font-size='30' text-anchor='middle' fill='%23DDA05E'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,700&family=Montserrat:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: same pieces as day-11. Day 12 adds tickable checklists (saved in your browser) and a 4-up bucket grid. */
+:root {
+  --forest: #273518;
+  --olive: #5F6C37;
+  --cream: #FEFADF;
+  --paper: #F6F1D8;
+  --sage: #E4E7CF;
+  --tan: #DDA05E;
+  --rust: #BC6C25;
+  --ink-soft: #4A5536;
+  --line: rgba(39, 53, 24, 0.16);
+  --display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --body: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--cream); color: var(--forest); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+a { color: inherit; }
+a:focus-visible { outline: 2px solid var(--rust); outline-offset: 3px; border-radius: 6px; }
+code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; background: var(--sage); padding: 1px 5px; border-radius: 5px; }
+
+.mast { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 56px 64px; }
+.wrap { max-width: 860px; margin: 0 auto; }
+.handle { display: inline-flex; align-items: center; gap: 8px; background: var(--tan); color: var(--forest); font-weight: 700; font-size: 14px; letter-spacing: 0.02em; padding: 8px 16px; border-radius: 999px; text-decoration: none; }
+.handle:hover { background: var(--cream); }
+.pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.handle.alt { background: transparent; color: var(--cream); box-shadow: inset 0 0 0 1.5px var(--tan); }
+.handle.alt:hover { background: var(--tan); color: var(--forest); }
+.mast h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 7vw, 4.2rem); line-height: 1.05; margin: 28px 0 0; text-wrap: balance; }
+.mast h1 em { color: var(--tan); font-weight: 700; }
+.mast p.lede { max-width: 58ch; margin: 22px 0 0; font-size: 1.05rem; color: var(--cream); opacity: 0.92; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 28px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tan); }
+.back { display: inline-block; margin-top: 18px; font-size: 13px; font-weight: 600; color: var(--tan); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+
+main { padding-inline: 20px; padding-block: 24px 40px; }
+.res { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 36px; padding-block: 48px; border-bottom: 1px solid var(--line); }
+.res:last-of-type { border-bottom: 0; }
+.num { font-family: var(--display); font-style: italic; font-weight: 700; font-size: 4.5rem; line-height: 0.9; color: var(--tan); }
+.kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--olive); }
+.res h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 4.5vw, 2.5rem); line-height: 1.1; margin: 6px 0 4px; text-wrap: balance; }
+.res h2 em { color: var(--rust); font-weight: 700; }
+.who { font-size: 14px; font-weight: 600; color: var(--ink-soft); margin: 0; }
+.why { margin: 16px 0 0; max-width: 60ch; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.facts li { font-size: 13px; font-weight: 600; background: var(--paper); border: 1px solid var(--line); padding: 4px 12px; border-radius: 999px; }
+
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 0; }
+.btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--forest); color: var(--forest); background: transparent; }
+.btn:hover { background: var(--forest); color: var(--cream); }
+.btn.primary { background: var(--forest); color: var(--cream); }
+.btn.primary:hover { background: var(--rust); border-color: var(--rust); }
+.btn span { font-size: 12px; opacity: 0.8; }
+
+.syllabus { margin: 32px 0 0; padding: 0; list-style: none; counter-reset: t; border-top: 1px solid var(--line); }
+.syllabus li { counter-increment: t; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 12px; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.syllabus li::before { content: counter(t, decimal-leading-zero); font-weight: 700; font-size: 14px; color: var(--rust); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.syllabus strong { display: block; font-weight: 600; font-size: 1rem; }
+.syllabus small { display: block; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+/* noise -> picture strip */
+.strip { margin: 28px 0 0; background: var(--forest); border-radius: 16px; padding: 18px 18px 14px; box-shadow: 8px 8px 0 var(--tan); }
+.strip ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.strip li { display: flex; flex-direction: column; gap: 6px; }
+.strip svg { width: 100%; height: auto; display: block; border-radius: 10px; }
+.strip span { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--tan); text-align: center; }
+.strip p { margin: 12px 0 0; font-size: 13px; color: var(--cream); opacity: .85; text-align: center; }
+
+/* term cards (from day-10, plus the house hard shadow) */
+.terms { margin: 28px 0 0; padding: 0; list-style: none; display: grid; gap: 18px; }
+.terms > li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border: 1.5px solid var(--forest); border-radius: 16px; overflow: hidden; background: var(--paper); box-shadow: 6px 6px 0 var(--forest); }
+.t-text { padding: 18px 20px; }
+.t-text h3 { margin: 0; font-family: var(--display); font-weight: 700; font-style: italic; font-size: 1.4rem; color: var(--rust); line-height: 1.15; }
+.t-text h3 small { font-family: var(--body); font-style: normal; font-weight: 600; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--olive); margin-left: 6px; }
+.t-text p { margin: 8px 0 0; font-size: 14px; line-height: 1.55; }
+.t-text .dev { display: inline-block; margin-top: 12px; font-size: 12.5px; font-weight: 600; background: var(--tan); color: var(--forest); padding: 4px 11px; border-radius: 999px; }
+.t-text .watch { margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+.t-text .watch b { color: var(--rust); }
+.t-math { background: var(--forest); color: var(--cream); padding: 18px 20px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--tan); margin-bottom: -4px; }
+.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.55; background: rgba(254,250,223,.08); border: 1px solid rgba(254,250,223,.18); border-radius: 8px; padding: 8px 10px; white-space: pre; overflow-x: auto; color: var(--cream); }
+.code .c { color: var(--tan); }
+@media (max-width: 680px) { .terms > li { grid-template-columns: minmax(0, 1fr); } }
+
+.key { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 26px 0 0; padding: 14px 18px; background: var(--paper); border: 1px dashed var(--olive); border-radius: 12px; font-size: 13.5px; }
+.key b { font-weight: 700; color: var(--olive); margin-right: 2px; letter-spacing: .06em; text-transform: uppercase; font-size: 11.5px; }
+.m { font-family: var(--display); font-style: italic; font-size: 1.05em; }
+
+/* tool card */
+.tool { margin: 26px 0 0; border: 1.5px solid var(--forest); border-radius: 16px; background: var(--paper); box-shadow: 6px 6px 0 var(--forest); overflow: hidden; }
+.tool .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tool .row div { padding: 16px 18px; border-right: 1px solid var(--line); }
+.tool .row div:last-child { border-right: 0; }
+.tool b { display: block; font-family: var(--display); font-size: 1.7rem; line-height: 1.1; color: var(--forest); }
+.tool b.hl { color: var(--rust); }
+.tool .row span { font-size: 13px; color: var(--ink-soft); }
+.tool .note { margin: 0; padding: 12px 18px; background: var(--forest); color: var(--cream); font-size: 13px; }
+.tool .note strong { color: var(--tan); }
+
+.buckets { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 24px 0 0; }
+.buckets li { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.buckets b { display: block; font-family: var(--display); font-style: italic; font-size: 1.3rem; color: var(--rust); line-height: 1.2; margin-bottom: 6px; }
+.buckets span { font-size: 14px; }
+pre.snip { margin: 24px 0 0; background: var(--forest); color: var(--cream); border-radius: 14px; padding: 18px 20px; font-size: 13.5px; line-height: 1.6; overflow-x: auto; }
+pre.snip .c { color: var(--tan); }
+
+footer { background: var(--forest); color: var(--cream); padding-inline: 20px; padding-block: 40px; }
+footer .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+footer p { margin: 0; font-family: var(--display); font-size: 1.35rem; }
+footer p em { color: var(--tan); }
+footer .gh { margin-top: 20px; font-size: 13px; opacity: 0.75; }
+footer .gh a { color: var(--cream); }
+
+@media (max-width: 640px) {
+  .res { grid-template-columns: minmax(0, 1fr); padding-block: 36px; }
+  .num { font-size: 3.2rem; }
+  .mast { padding-block: 40px 48px; }
+  .buckets, .tool .row { grid-template-columns: minmax(0, 1fr); }
+  .tool .row div { border-right: 0; border-bottom: 1px solid var(--line); }
+  .strip ol { gap: 6px; }
+  .strip span { font-size: 9.5px; letter-spacing: .04em; }
+}
+
+.buckets.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.group { margin: 30px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--olive); }
+.group small { display: block; margin-top: 4px; font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ink-soft); }
+.check { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.check li { position: relative; padding: 13px 0 13px 40px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.check li::before { content: ""; position: absolute; left: 2px; top: 15px; width: 20px; height: 20px; border: 1.5px solid var(--forest); border-radius: 6px; background: var(--paper); }
+.check li.done::before { background: var(--olive); border-color: var(--olive); }
+.check li.done::after { content: ""; position: absolute; left: 9px; top: 18px; width: 6px; height: 11px; border: solid var(--cream); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.check li.done > a, .check li.done > b { text-decoration: line-through; text-decoration-color: var(--rust); }
+.check a { font-weight: 600; text-underline-offset: 3px; }
+.check small { display: block; margin-top: 3px; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+.check small a { font-weight: 600; }
+.check .n { display: inline-block; min-width: 26px; margin-right: 6px; font-weight: 700; font-size: 13px; color: var(--rust); font-variant-numeric: tabular-nums; }
+.check li.proj { background: var(--sage); padding-right: 12px; }
+@media (max-width: 640px) { .buckets.four { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap">
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+    <h1>Day 12 · The exact plan<br><em>I'm following.</em></h1>
+    <p class="lede">I went too fast for the first 11 days and skipped the basics, so I went back and started properly. This is the plan I'm following now, exactly as I use it: 14 steps in 4 stages, 4 projects for your portfolio, and about 10 hours a week. Tick things off as you go.</p>
+    <div class="legend"><span>4 stages</span><span>4 projects</span><span>~10 hrs a week</span></div>
+    <a class="back" href="https://buildwithakshita.github.io/ml-resources/">← All 30 Days to MLE resources</a>
+  </div>
+</header>
+<main><div class="wrap">
+
+    <section class="res" id="how">
+      <div class="num">01</div>
+      <div>
+        <div class="kicker">How it works</div>
+        <h2>Watch, build, <em>then move on</em></h2>
+        <p class="who">The whole plan in one sentence</p>
+        <p class="why">Watch the main course of each stage in order, and finish that stage's project before you move on. Each project gets its own GitHub repo and a README covering what it does, what you learned and your results. By the end, those four repos are your portfolio.</p>
+        <ul class="facts"><li>Stage 1 · Dec – Jan</li><li>Stage 2 · Feb – Mar</li><li>Stage 3 · Apr – May</li><li>Stage 4 · May onwards</li></ul>
+        <ul class="buckets four">
+          <li><b>Prediction</b><span>End of Stage 1. Your own dataset, classical ML. Later you deploy it with experiment tracking and monitoring.</span></li>
+          <li><b>Tiny GPT</b><span>End of Stage 2. A small GPT trained on text you choose.</span></li>
+          <li><b>Study buddy</b><span>Built step by step in Stage 3. RAG, then an agent, then deployed with guardrails.</span></li>
+          <li><b>Recommender</b><span>Stage 4. A small ranking or recommendation model, the kind of system behind your feeds.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="res" id="stage-1">
+      <div class="num">02</div>
+      <div>
+        <div class="kicker">Stage 1 · Dec – Jan</div>
+        <h2>ML <em>basics</em></h2>
+        <p class="who">The part I rushed the first time</p>
+        <div class="group">Math refresher <small>optional: skip it if you're comfortable with the math, come back when you need it</small></div>
+        <ul class="check">
+          <li><a href="https://www.3blue1brown.com/topics/linear-algebra" target="_blank" rel="noopener">3Blue1Brown · Essence of Linear Algebra</a></li>
+          <li><a href="https://www.3blue1brown.com/topics/calculus" target="_blank" rel="noopener">3Blue1Brown · Essence of Calculus</a></li>
+          <li><a href="https://www.3blue1brown.com/topics/neural-networks" target="_blank" rel="noopener">3Blue1Brown · Neural Networks</a></li>
+        </ul>
+        <div class="group">Main course</div>
+        <ul class="check">
+          <li><span class="n">1</span><a href="https://www.deeplearning.ai/specializations/machine-learning" target="_blank" rel="noopener">Andrew Ng · Machine Learning Specialization</a><small>Skip anything you already know.</small></li>
+          <li class="proj"><b>Project:</b> pick any dataset you like and predict something with it, like song popularity or delivery times.</li>
+        </ul>
+        <div class="group">Papers</div>
+        <ul class="check">
+          <li><a href="https://homes.cs.washington.edu/~pedrod/papers/cacm12.pdf" target="_blank" rel="noopener">A Few Useful Things to Know About Machine Learning</a><small>Domingos, 2012. An easy first paper.</small></li>
+          <li><a href="https://arxiv.org/abs/1603.02754" target="_blank" rel="noopener">XGBoost</a><small>Chen &amp; Guestrin, 2016. Read it while you do the trees section.</small></li>
+        </ul>
+        <div class="group">Add-ons</div>
+        <ul class="check">
+          <li><b>Stats for ML:</b> A/B testing, p-values, confidence intervals, common distributions.<small>Suggested: <a href="https://www.youtube.com/@statquest" target="_blank" rel="noopener">StatQuest</a>'s statistics videos.</small></li>
+          <li><b>Data skills:</b> data leakage, imbalanced classes, feature engineering.<small>Suggested: Kaggle Learn's <a href="https://www.kaggle.com/learn/intermediate-machine-learning" target="_blank" rel="noopener">Intermediate Machine Learning</a> and <a href="https://www.kaggle.com/learn/feature-engineering" target="_blank" rel="noopener">Feature Engineering</a>. Use them in your Stage 1 project.</small></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="res" id="stage-2">
+      <div class="num">03</div>
+      <div>
+        <div class="kicker">Stage 2 · Feb – Mar</div>
+        <h2>Neural nets <em>from scratch</em></h2>
+        <p class="who">Code along, don't just watch</p>
+        <div class="group">Main course</div>
+        <ul class="check">
+          <li><span class="n">2</span><a href="https://youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ" target="_blank" rel="noopener">Karpathy · Neural Networks: Zero to Hero</a><small>Code along with every video.</small></li>
+          <li><span class="n">3</span><a href="https://youtu.be/7xTGNNLPyMI" target="_blank" rel="noopener">Karpathy · Deep Dive into LLMs like ChatGPT</a></li>
+          <li class="proj"><b>Project:</b> train a tiny GPT on text you choose.</li>
+        </ul>
+        <div class="group">Papers</div>
+        <ul class="check">
+          <li><a href="https://www.jmlr.org/papers/volume3/bengio03a/bengio03a.pdf" target="_blank" rel="noopener">A Neural Probabilistic Language Model</a><small>Bengio et al., 2003. Read it with makemore part 2, which builds this model.</small></li>
+          <li><a href="https://arxiv.org/abs/1502.03167" target="_blank" rel="noopener">Batch Normalization</a><small>Ioffe &amp; Szegedy, 2015. Read it with makemore part 3.</small></li>
+          <li><a href="https://arxiv.org/abs/1512.03385" target="_blank" rel="noopener">Deep Residual Learning (ResNet)</a><small>He et al., 2015.</small></li>
+          <li><a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">Attention Is All You Need</a><small>Vaswani et al., 2017. Read it with "Let's build GPT".</small></li>
+          <li><a href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener">Language Models are Few-Shot Learners (GPT-3)</a><small>Brown et al., 2020. Read it with the Deep Dive video.</small></li>
+        </ul>
+        <div class="group">Add-ons</div>
+        <ul class="check">
+          <li><b>PyTorch fluency:</b> write a full training loop (dataset, model, loss, optimizer) without looking anything up.<small>Suggested: the official <a href="https://pytorch.org/tutorials/beginner/basics/intro.html" target="_blank" rel="noopener">PyTorch "Learn the Basics"</a> tutorial, or Daniel Bourke's <a href="https://www.learnpytorch.io/" target="_blank" rel="noopener">Learn PyTorch for Deep Learning</a>.</small></li>
+          <li><b>Computer vision</b> (optional, only if the roles you want need it).<small>Suggested: <a href="https://cs231n.stanford.edu/" target="_blank" rel="noopener">Stanford CS231n</a> lectures.</small></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="res" id="stage-3">
+      <div class="num">04</div>
+      <div>
+        <div class="kicker">Stage 3 · Apr – May</div>
+        <h2>Build an <em>LLM app</em></h2>
+        <p class="who">One project that grows after every playlist</p>
+        <p class="why">A study buddy that works over your own notes. Each playlist adds one piece to it.</p>
+        <div class="group">Main course</div>
+        <ul class="check">
+          <li><span class="n">4</span><a href="https://youtube.com/playlist?list=PLZoTAELRMXVM8Pf4U67L4UuDRgV4TNX9D" target="_blank" rel="noopener">Krish Naik · Complete RAG</a><small><b>Build:</b> a chatbot that answers questions from your notes.</small></li>
+          <li><span class="n">5</span><a href="https://youtube.com/playlist?list=PLZoTAELRMXVNOWh1SDXt5NFujQMOt-CWy" target="_blank" rel="noopener">Krish Naik · LlamaIndex</a><small><b>Build:</b> improve that chatbot with LlamaIndex.</small></li>
+          <li><span class="n">6</span><a href="https://youtube.com/playlist?list=PLZoTAELRMXVN9VbAx5I2VvloTtYmlApe3" target="_blank" rel="noopener">Krish Naik · Finetuning LLM</a><small><b>Build:</b> fine-tune a small model to write flashcards from your notes.</small></li>
+          <li><span class="n">7</span><a href="https://youtube.com/playlist?list=PLZoTAELRMXVPFd7JdvB-rnTb_5V26NYNO" target="_blank" rel="noopener">Krish Naik · Agentic AI with LangGraph</a><small><b>Build:</b> turn it into an agent that quizzes you.</small></li>
+          <li><span class="n">8</span><a href="https://youtube.com/playlist?list=PLZoTAELRMXVPC8r1xF68Gksi241DAtMsK" target="_blank" rel="noopener">Krish Naik · MCP</a><small><b>Build:</b> connect it to Claude.</small></li>
+          <li><span class="n">9</span><a href="https://youtube.com/playlist?list=PLZoTAELRMXVP8-wzKPtrRST3jNCprvMZj" target="_blank" rel="noopener">Krish Naik · AWS Bedrock</a><small><b>Build:</b> deploy it.</small></li>
+          <li><span class="n">10</span><a href="https://youtube.com/playlist?list=PLNxQDA0Hq_Nk" target="_blank" rel="noopener">Krish Naik · AI Safety and LLM Security</a><small><b>Build:</b> add guardrails.</small></li>
+        </ul>
+        <div class="group">Papers</div>
+        <ul class="check">
+          <li><a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Retrieval-Augmented Generation</a><small>Lewis et al., 2020. Read it with the RAG playlist.</small></li>
+          <li><a href="https://arxiv.org/abs/2106.09685" target="_blank" rel="noopener">LoRA</a><small>Hu et al., 2021. Read it with the fine-tuning playlist.</small></li>
+          <li><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">InstructGPT</a><small>Ouyang et al., 2022. How RLHF turned GPT-3 into a chat assistant.</small></li>
+          <li><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">ReAct</a><small>Yao et al., 2022. Read it with LangGraph: it's the idea behind most agents.</small></li>
+          <li><a href="https://arxiv.org/abs/2302.12173" target="_blank" rel="noopener">Indirect Prompt Injection</a><small>Greshake et al., 2023. Read it with the safety playlist.</small></li>
+        </ul>
+        <div class="group">Add-on</div>
+        <ul class="check">
+          <li><b>Production ML / MLOps:</b> experiment tracking, serving a model behind an API, drift monitoring.<small>Suggested: the <a href="https://github.com/DataTalksClub/mlops-zoomcamp" target="_blank" rel="noopener">DataTalksClub MLOps Zoomcamp</a>, or <a href="https://madewithml.com/" target="_blank" rel="noopener">Made With ML</a> by Goku Mohandas. Use it to deploy your Stage 1 project with MLflow or Weights &amp; Biases.</small></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="res" id="stage-4">
+      <div class="num">05</div>
+      <div>
+        <div class="kicker">Stage 4 · May onwards</div>
+        <h2>Job-ready and <em>interview prep</em></h2>
+        <p class="who">Alongside applying</p>
+        <ul class="check">
+          <li><span class="n">11</span><b>Recommender systems and ranking.</b> Do this one first: a lot of ML engineer roles at big tech are recommendations, search or ads.<small>Suggested: Google's <a href="https://developers.google.com/machine-learning/recommendation" target="_blank" rel="noopener">Recommendation Systems</a> course, plus <a href="https://eugeneyan.com/writing/" target="_blank" rel="noopener">Eugene Yan's blog</a> on recsys. <b>Project 4:</b> a recommender on the MovieLens dataset, starting with matrix factorization, then a two-tower model if you have time.</small></li>
+          <li><span class="n">12</span><b>LLM evals.</b><small>Suggested: Hamel Husain's <a href="https://hamel.dev/blog/posts/evals/" target="_blank" rel="noopener">Your AI Product Needs Evals</a>. Then add a small test set to your study buddy app.</small></li>
+          <li><span class="n">13</span><b>ML system design.</b><small>Suggested: Chip Huyen's book <i>Designing Machine Learning Systems</i>. Practise 3–4 designs out loud, like a recommendation feed, search, or a RAG assistant.</small></li>
+          <li><span class="n">14</span><b>ML coding rounds:</b> implement k-means, logistic regression and attention from scratch, timed and without notes.<small>Suggested: <a href="https://www.deep-ml.com/" target="_blank" rel="noopener">Deep-ML</a> for ML coding problems, and <a href="https://neetcode.io/practice" target="_blank" rel="noopener">NeetCode 150</a> to keep LeetCode fresh.</small></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="res" id="rules">
+      <div class="num">06</div>
+      <div>
+        <div class="kicker">The rules</div>
+        <h2>What keeps it <em>actually working</em></h2>
+        <p class="who">The second one is the one I skipped</p>
+        <ul class="buckets four">
+          <li><b>~10 hrs a week</b><span>Watch on weekday evenings, build on Saturday.</span></li>
+          <li><b>One note per video</b><span>5 lines in your own words, plus 3 questions to quiz yourself on later.</span></li>
+          <li><b>A paper every 2 weeks</b><span>Abstract and figures first, then the method. Skip the parts that lose you, and write the same 5-line note.</span></li>
+          <li><b>Stuck 25 minutes?</b><span>Ask an AI for a hint, not the answer.</span></li>
+        </ul>
+      </div>
+    </section>
+
+</div></main>
+<footer>
+  <div class="wrap">
+    <p>Follow the 30 days on <em>Instagram</em> &amp; <em>GitHub</em></p>
+    <div class="pills">
+      <a class="handle" href="https://www.instagram.com/buildwithakshita/" target="_blank" rel="noopener">@buildwithakshita</a>
+      <a class="handle alt" href="https://github.com/buildwithakshita" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
+    </div>
+  </div>
+  <div class="wrap gh">Code &amp; projects at <a href="https://github.com/buildwithakshita" target="_blank" rel="noopener">github.com/buildwithakshita</a> · <a href="https://github.com/buildwithakshita/ml-resources" target="_blank" rel="noopener">View this page's source</a></div>
+</footer>
+
+<script>
+(function(){
+  var KEY='mlr-day12-checks', saved={};
+  try { saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; } catch(e) {}
+  document.querySelectorAll('.check li').forEach(function(li,i){
+    if (saved[i]) li.classList.add('done');
+    li.setAttribute('role','checkbox'); li.setAttribute('tabindex','0');
+    li.setAttribute('aria-checked', saved[i] ? 'true' : 'false');
+    function toggle(){ var on=li.classList.toggle('done'); li.setAttribute('aria-checked', on); saved[i]=on;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch(e) {} }
+    li.addEventListener('click',function(e){ if (e.target.closest('a')) return; toggle(); });
+    li.addEventListener('keydown',function(e){ if (e.key===' '||e.key==='Enter'){ e.preventDefault(); toggle(); } });
+  });
+})();
+</script>
+</body>
+</html>
